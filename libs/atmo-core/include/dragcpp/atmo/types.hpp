@@ -1,6 +1,6 @@
 /**
  * @file types.hpp
- * @brief Core domain types for drag-cpp.
+ * @brief Core domain types for astrodynamics-forces-cpp.
  * @author Watosn
  */
 #pragma once

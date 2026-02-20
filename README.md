@@ -1,9 +1,9 @@
-# drag-cpp
+# astrodynamics-forces-cpp
 
-Unified C++20 drag modeling platform for spacecraft drag acceleration.
+Unified C++20 astrodynamics perturbation modeling platform, with drag implemented first.
 
 ## Scope
-- Shared atmospheric/wind/weather interfaces
+- Shared force interfaces (`IPerturbationModel`, `PerturbationStack`)
 - Drag acceleration core (relative velocity + ballistic term)
 - Spacecraft geometry/surface property hooks
 - Adapter integration points for:
@@ -26,6 +26,13 @@ External model repos are pulled via CPM with HTTPS URLs by default; override cac
 ./build/macos-debug/drag_cli 6778137 0 0 0 7670 0 1000000000
 ```
 
+Batch CLI:
+```bash
+./build/macos-debug/drag_batch_cli input.csv output.csv csv nrlmsis /path/to/msis21.parm zero "" /path/to/SW-Last5Years.csv
+```
+Input row format:
+- `epoch_utc_s,x_m,y_m,z_m,vx_mps,vy_mps,vz_mps`
+
 Optional weather input:
 - Pass CelesTrak 5-year CSV as final arg:
 ```bash
@@ -36,7 +43,7 @@ Weather mapping notes:
 - CelesTrak KP columns are parsed in tenths and converted to 0-9 scale.
 - `kp_3h_current` is used for DTM delayed 3-hour Kp input.
 - Daily `kp` is used for DTM 24-hour mean Kp input.
-- `ap_msis_history` is computed from 3-hour AP slots and exposed for NRLMSIS-compatible history plumbing.
+- `ap_msis_history` is computed from 3-hour AP slots and passed through the NRLMSIS adapter.
 
 Drag area modes:
 - Cannonball: set `use_surface_model=false`; area is fixed at `reference_area_m2`.
@@ -48,7 +55,10 @@ General perturbation interface:
 - Combine models with `dragcpp::forces::PerturbationStack`.
 - Drag is exposed as `dragcpp::drag::DragPerturbationModel` and plugs directly into the same stack used for future gravity/SRP/third-body models.
 
-## Next Integration Steps
-1. Replace `models-basic` with adapter-backed model bundle wiring.
-2. Implement real space weather readers/interpolation in `libs/space-weather`.
-3. Add frame/attitude handling and surface-resolved drag in `libs/drag-core`.
+Performance benchmark:
+```bash
+./build/macos-debug/dragcpp_perf_benchmark
+```
+Environment controls:
+- `ASTRO_FORCES_PERF_SAMPLES` (default `40`)
+- `ASTRO_FORCES_PERF_ITERS` (default `5000`)
