@@ -6,10 +6,10 @@
 
 #include <spdlog/spdlog.h>
 
-#include "dragcpp/drag/drag_model.hpp"
-#include "dragcpp/models/exponential_atmosphere.hpp"
-#include "dragcpp/sc/spacecraft.hpp"
-#include "dragcpp/weather/static_provider.hpp"
+#include "astroforces/drag/drag_model.hpp"
+#include "astroforces/models/exponential_atmosphere.hpp"
+#include "astroforces/sc/spacecraft.hpp"
+#include "astroforces/weather/static_provider.hpp"
 
 int main() {
   using namespace astroforces;

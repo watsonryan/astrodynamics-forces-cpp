@@ -15,14 +15,14 @@
 
 #include <spdlog/spdlog.h>
 
-#include "dragcpp/adapters/dtm2020_adapter.hpp"
-#include "dragcpp/adapters/hwm14_adapter.hpp"
-#include "dragcpp/adapters/nrlmsis21_adapter.hpp"
-#include "dragcpp/drag/drag_model.hpp"
-#include "dragcpp/models/exponential_atmosphere.hpp"
-#include "dragcpp/sc/spacecraft.hpp"
-#include "dragcpp/weather/celestrak_csv_provider.hpp"
-#include "dragcpp/weather/static_provider.hpp"
+#include "astroforces/adapters/dtm2020_adapter.hpp"
+#include "astroforces/adapters/hwm14_adapter.hpp"
+#include "astroforces/adapters/nrlmsis21_adapter.hpp"
+#include "astroforces/drag/drag_model.hpp"
+#include "astroforces/models/exponential_atmosphere.hpp"
+#include "astroforces/sc/spacecraft.hpp"
+#include "astroforces/weather/celestrak_csv_provider.hpp"
+#include "astroforces/weather/static_provider.hpp"
 
 namespace {
 

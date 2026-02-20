@@ -4,12 +4,12 @@
  * @author Watosn
  */
 
-#include "dragcpp/forces/third_body.hpp"
+#include "astroforces/forces/third_body.hpp"
 
 #include <cmath>
 
-#include "dragcpp/atmo/conversions.hpp"
-#include "dragcpp/atmo/constants.hpp"
+#include "astroforces/atmo/conversions.hpp"
+#include "astroforces/atmo/constants.hpp"
 #include "jpl_eph/jpl_eph.hpp"
 
 namespace astroforces::forces {

@@ -14,15 +14,15 @@
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
-#include "dragcpp/adapters/dtm2020_adapter.hpp"
-#include "dragcpp/atmo/conversions.hpp"
-#include "dragcpp/atmo/constants.hpp"
-#include "dragcpp/drag/drag_perturbation.hpp"
-#include "dragcpp/forces/perturbation.hpp"
-#include "dragcpp/forces/third_body.hpp"
-#include "dragcpp/models/exponential_atmosphere.hpp"
-#include "dragcpp/sc/spacecraft.hpp"
-#include "dragcpp/weather/celestrak_csv_provider.hpp"
+#include "astroforces/adapters/dtm2020_adapter.hpp"
+#include "astroforces/atmo/conversions.hpp"
+#include "astroforces/atmo/constants.hpp"
+#include "astroforces/drag/drag_perturbation.hpp"
+#include "astroforces/forces/perturbation.hpp"
+#include "astroforces/forces/third_body.hpp"
+#include "astroforces/models/exponential_atmosphere.hpp"
+#include "astroforces/sc/spacecraft.hpp"
+#include "astroforces/weather/celestrak_csv_provider.hpp"
 
 namespace {
 

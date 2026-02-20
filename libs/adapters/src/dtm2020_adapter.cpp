@@ -4,11 +4,11 @@
  * @author Watosn
  */
 
-#include "dragcpp/adapters/dtm2020_adapter.hpp"
+#include "astroforces/adapters/dtm2020_adapter.hpp"
 
 #include <utility>
 
-#include "dragcpp/atmo/conversions.hpp"
+#include "astroforces/atmo/conversions.hpp"
 #include "dtm2020/dtm2020_operational.hpp"
 
 namespace astroforces::adapters {

@@ -11,8 +11,8 @@
 
 #include <spdlog/spdlog.h>
 
-#include "dragcpp/atmo/types.hpp"
-#include "dragcpp/forces/third_body.hpp"
+#include "astroforces/atmo/types.hpp"
+#include "astroforces/forces/third_body.hpp"
 
 namespace {
 

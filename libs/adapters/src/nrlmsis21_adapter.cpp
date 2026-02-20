@@ -4,11 +4,11 @@
  * @author Watosn
  */
 
-#include "dragcpp/adapters/nrlmsis21_adapter.hpp"
+#include "astroforces/adapters/nrlmsis21_adapter.hpp"
 
 #include <utility>
 
-#include "dragcpp/atmo/conversions.hpp"
+#include "astroforces/atmo/conversions.hpp"
 #include "msis21/msis21.hpp"
 
 namespace astroforces::adapters {

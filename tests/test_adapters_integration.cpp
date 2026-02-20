@@ -10,13 +10,13 @@
 
 #include <spdlog/spdlog.h>
 
-#include "dragcpp/adapters/dtm2020_adapter.hpp"
-#include "dragcpp/adapters/hwm14_adapter.hpp"
-#include "dragcpp/adapters/nrlmsis21_adapter.hpp"
-#include "dragcpp/atmo/conversions.hpp"
-#include "dragcpp/drag/drag_model.hpp"
-#include "dragcpp/sc/spacecraft.hpp"
-#include "dragcpp/weather/static_provider.hpp"
+#include "astroforces/adapters/dtm2020_adapter.hpp"
+#include "astroforces/adapters/hwm14_adapter.hpp"
+#include "astroforces/adapters/nrlmsis21_adapter.hpp"
+#include "astroforces/atmo/conversions.hpp"
+#include "astroforces/drag/drag_model.hpp"
+#include "astroforces/sc/spacecraft.hpp"
+#include "astroforces/weather/static_provider.hpp"
 #include "msis21/msis21.hpp"
 
 namespace {

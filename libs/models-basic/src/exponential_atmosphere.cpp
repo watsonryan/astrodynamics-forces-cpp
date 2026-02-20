@@ -4,11 +4,11 @@
  * @author Watosn
  */
 
-#include "dragcpp/models/exponential_atmosphere.hpp"
+#include "astroforces/models/exponential_atmosphere.hpp"
 
 #include <cmath>
 
-#include "dragcpp/atmo/constants.hpp"
+#include "astroforces/atmo/constants.hpp"
 
 namespace astroforces::models {
 

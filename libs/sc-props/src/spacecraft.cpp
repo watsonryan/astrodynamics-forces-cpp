@@ -4,36 +4,53 @@
  * @author Watosn
  */
 
-#include "dragcpp/sc/spacecraft.hpp"
+#include "astroforces/sc/spacecraft.hpp"
 
 #include <algorithm>
 
 namespace astroforces::sc {
 
-AeroProjection projected_area_and_cd(const SpacecraftProperties& sc, const astroforces::atmo::Vec3& flow_dir_body) {
+ForceProjection projected_area_and_coeff(const SpacecraftProperties& sc,
+                                         const astroforces::atmo::Vec3& flow_dir_body,
+                                         double reference_coeff,
+                                         SurfaceCoeffModel coeff_model) {
   if (!sc.use_surface_model || sc.surfaces.empty()) {
-    return AeroProjection{.area_m2 = sc.reference_area_m2, .cd_effective = sc.cd};
+    return ForceProjection{.area_m2 = sc.reference_area_m2, .coeff_effective = reference_coeff};
   }
 
   double area = 0.0;
-  double weighted_cd = 0.0;
+  double weighted_coeff = 0.0;
   for (const auto& s : sc.surfaces) {
     const double c = -astroforces::atmo::dot(s.normal_body, flow_dir_body);
     const double proj = s.area_m2 * std::max(0.0, c);
     area += proj;
-    const double cd_base = (s.cd > 0.0) ? s.cd : sc.cd;
-    double cd_surface = cd_base;
-    if (s.specularity > 0.0 || s.accommodation > 0.0) {
-      const double incidence = std::clamp(c, 0.0, 1.0);
-      const double spec = std::clamp(s.specularity, 0.0, 1.0);
-      const double accom = std::clamp(s.accommodation, 0.0, 1.0);
-      const double modifier = 1.0 + 0.25 * accom * (1.0 + incidence) - 0.15 * spec * (1.0 - incidence);
-      cd_surface = cd_base * modifier;
+    double coeff_surface = reference_coeff;
+    if (coeff_model == SurfaceCoeffModel::Drag) {
+      const double cd_base = (s.cd > 0.0) ? s.cd : sc.cd;
+      coeff_surface = cd_base;
+      if (s.specularity > 0.0 || s.accommodation > 0.0) {
+        const double incidence = std::clamp(c, 0.0, 1.0);
+        const double spec = std::clamp(s.specularity, 0.0, 1.0);
+        const double accom = std::clamp(s.accommodation, 0.0, 1.0);
+        const double modifier = 1.0 + 0.25 * accom * (1.0 + incidence) - 0.15 * spec * (1.0 - incidence);
+        coeff_surface = cd_base * modifier;
+      }
+    } else if (coeff_model == SurfaceCoeffModel::RadiationPressure) {
+      coeff_surface = (s.cr > 0.0) ? s.cr : sc.cr;
     }
-    weighted_cd += cd_surface * proj;
+    weighted_coeff += coeff_surface * proj;
   }
-  const double cd_effective = (area > 0.0) ? (weighted_cd / area) : sc.cd;
-  return AeroProjection{.area_m2 = area, .cd_effective = cd_effective};
+  const double coeff_effective = (area > 0.0) ? (weighted_coeff / area) : reference_coeff;
+  return ForceProjection{.area_m2 = area, .coeff_effective = coeff_effective};
+}
+
+AeroProjection projected_area_and_cd(const SpacecraftProperties& sc, const astroforces::atmo::Vec3& flow_dir_body) {
+  const auto p = projected_area_and_coeff(sc, flow_dir_body, sc.cd, SurfaceCoeffModel::Drag);
+  return AeroProjection{.area_m2 = p.area_m2, .cd_effective = p.coeff_effective};
+}
+
+ForceProjection projected_area_and_cr(const SpacecraftProperties& sc, const astroforces::atmo::Vec3& flow_dir_body) {
+  return projected_area_and_coeff(sc, flow_dir_body, sc.cr, SurfaceCoeffModel::RadiationPressure);
 }
 
 double projected_area_m2(const SpacecraftProperties& sc, const astroforces::atmo::Vec3& flow_dir_body) {

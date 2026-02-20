@@ -9,8 +9,8 @@
 
 #include <spdlog/spdlog.h>
 
-#include "dragcpp/atmo/types.hpp"
-#include "dragcpp/weather/celestrak_csv_provider.hpp"
+#include "astroforces/atmo/types.hpp"
+#include "astroforces/weather/celestrak_csv_provider.hpp"
 
 namespace {
 

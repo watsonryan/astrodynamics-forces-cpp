@@ -4,12 +4,12 @@
  * @author Watosn
  */
 
-#include "dragcpp/adapters/hwm14_adapter.hpp"
+#include "astroforces/adapters/hwm14_adapter.hpp"
 
 #include <cmath>
 #include <utility>
 
-#include "dragcpp/atmo/conversions.hpp"
+#include "astroforces/atmo/conversions.hpp"
 #include "hwm14/hwm14.hpp"
 
 namespace astroforces::adapters {

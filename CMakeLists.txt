@@ -69,7 +69,9 @@ add_library(dragcpp_drag_core STATIC
   libs/drag-core/src/drag_model.cpp
   libs/drag-core/src/drag_perturbation.cpp
   libs/drag-core/src/perturbation.cpp
-  libs/drag-core/src/third_body.cpp)
+  libs/drag-core/src/third_body.cpp
+  libs/drag-core/src/srp_model.cpp
+  libs/drag-core/src/srp_perturbation.cpp)
 target_include_directories(dragcpp_drag_core PUBLIC ${CMAKE_SOURCE_DIR}/libs/drag-core/include)
 target_link_libraries(dragcpp_drag_core PUBLIC dragcpp_atmo_core dragcpp_sc_props)
 if(DRAGCPP_EIGEN_TARGET)
@@ -164,7 +166,19 @@ target_link_libraries(third_body_batch_cli PRIVATE
   dragcpp_atmo_core
   dragcpp_drag_core)
 
-foreach(tgt dragcpp_space_weather dragcpp_sc_props dragcpp_models_basic dragcpp_drag_core dragcpp_adapters drag_cli drag_batch_cli perturbation_profile_cli third_body_cli third_body_batch_cli)
+add_executable(srp_cli apps/forces-cli/srp_cli.cpp)
+target_link_libraries(srp_cli PRIVATE
+  dragcpp_atmo_core
+  dragcpp_sc_props
+  dragcpp_drag_core)
+
+add_executable(srp_batch_cli apps/forces-cli/srp_batch_cli.cpp)
+target_link_libraries(srp_batch_cli PRIVATE
+  dragcpp_atmo_core
+  dragcpp_sc_props
+  dragcpp_drag_core)
+
+foreach(tgt dragcpp_space_weather dragcpp_sc_props dragcpp_models_basic dragcpp_drag_core dragcpp_adapters drag_cli drag_batch_cli perturbation_profile_cli third_body_cli third_body_batch_cli srp_cli srp_batch_cli)
   if(MSVC)
     target_compile_options(${tgt} PRIVATE /W4)
     if(DRAGCPP_WARNINGS_AS_ERRORS)
@@ -249,4 +263,12 @@ if(DRAGCPP_BUILD_TESTS)
     dragcpp_drag_core)
   target_compile_definitions(dragcpp_test_third_body PRIVATE DRAGCPP_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
   add_test(NAME ThirdBody COMMAND dragcpp_test_third_body)
+
+  add_executable(dragcpp_test_srp tests/test_srp.cpp)
+  target_link_libraries(dragcpp_test_srp PRIVATE
+    dragcpp_atmo_core
+    dragcpp_sc_props
+    dragcpp_drag_core)
+  target_compile_definitions(dragcpp_test_srp PRIVATE DRAGCPP_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
+  add_test(NAME SRP COMMAND dragcpp_test_srp)
 endif()

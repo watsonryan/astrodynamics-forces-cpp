@@ -4,11 +4,13 @@
  * @author Watosn
  */
 
-#include "dragcpp/drag/drag_model.hpp"
+#include "astroforces/drag/drag_model.hpp"
 
 #include <cmath>
 
 #include <Eigen/Dense>
+
+#include "astroforces/forces/surface_force.hpp"
 
 namespace astroforces::drag {
 
@@ -34,34 +36,40 @@ DragResult DragAccelerationModel::evaluate(const astroforces::atmo::StateVector&
   }
 
   const auto vrel = state.velocity_mps - wind.velocity_mps;
-  const double speed = astroforces::atmo::norm(vrel);
+  double speed = 0.0;
+  const auto flow_dir_frame = astroforces::forces::unit_direction(vrel, &speed);
   if (!std::isfinite(speed)) {
     return DragResult{.status = astroforces::atmo::Status::NumericalError};
   }
 
   astroforces::atmo::Vec3 flow_dir_body{};
   if (speed > 0.0) {
-    const Eigen::Vector3d flow_frame(vrel.x / speed, vrel.y / speed, vrel.z / speed);
+    const Eigen::Vector3d flow_frame(flow_dir_frame.x, flow_dir_frame.y, flow_dir_frame.z);
     const Eigen::Map<const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> body_from_frame(state.body_from_frame_dcm.data());
     const Eigen::Vector3d flow_body = body_from_frame * flow_frame;
     flow_dir_body = astroforces::atmo::Vec3{flow_body.x(), flow_body.y(), flow_body.z()};
   }
-  const auto aero = astroforces::sc::projected_area_and_cd(sc, flow_dir_body);
-  const double area = aero.area_m2;
-  const double cd = aero.cd_effective;
 
-  const double coeff = -0.5 * a.density_kg_m3 * cd * area / sc.mass_kg;
-  const auto accel = coeff * speed * vrel;
   const double q_pa = 0.5 * a.density_kg_m3 * speed * speed;
+  const auto sf = astroforces::forces::evaluate_surface_force(sc,
+                                                              flow_dir_frame,
+                                                              flow_dir_body,
+                                                              q_pa,
+                                                              sc.cd,
+                                                              astroforces::sc::SurfaceCoeffModel::Drag,
+                                                              -1.0);
+  if (sf.status != astroforces::atmo::Status::Ok) {
+    return DragResult{.status = sf.status};
+  }
 
-  return DragResult{.acceleration_mps2 = accel,
+  return DragResult{.acceleration_mps2 = sf.acceleration_mps2,
                     .relative_velocity_mps = vrel,
                     .density_kg_m3 = a.density_kg_m3,
                     .temperature_k = a.temperature_k,
                     .relative_speed_mps = speed,
                     .dynamic_pressure_pa = q_pa,
-                    .area_m2 = area,
-                    .cd = cd,
+                    .area_m2 = sf.area_m2,
+                    .cd = sf.coeff,
                     .weather = w,
                     .status = astroforces::atmo::Status::Ok};
 }

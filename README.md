@@ -1,6 +1,6 @@
 # astrodynamics-forces-cpp
 
-Unified C++20 astrodynamics perturbation modeling platform, with drag implemented first.
+Unified C++20 astrodynamics perturbation modeling platform.
 
 ## Architecture
 ```mermaid
@@ -9,16 +9,21 @@ flowchart LR
   A --> C[sc-props<br/>cannonball + macro surfaces]
   A --> D[adapters<br/>NRLMSIS / DTM2020 / HWM14]
   A --> E[drag-core<br/>DragAccelerationModel]
+  A --> R[srp-core<br/>SrpAccelerationModel]
   A --> F[forces<br/>IPerturbationModel + PerturbationStack]
   B --> E
   C --> E
+  C --> R
   D --> E
   E --> F
+  R --> F
   T[third-body<br/>Sun+Moon via jplEphem] --> F
   F --> G[apps/drag-cli]
   F --> H[apps/drag_batch_cli]
   F --> X[apps/third_body_cli]
   F --> Y[apps/third_body_batch_cli]
+  F --> S[apps/srp_cli]
+  F --> U[apps/srp_batch_cli]
   F --> P[apps/perturbation_profile_cli]
   P --> Q[scripts/plot_perturbation_profile.py]
   I[external repos via CPM] --> D
@@ -93,6 +98,19 @@ General perturbation interface:
 - Combine models with `astroforces::forces::PerturbationStack`.
 - Drag is exposed as `astroforces::drag::DragPerturbationModel` and plugs directly into the same stack used for future gravity/SRP/third-body models.
 - Third-body is exposed as `astroforces::forces::ThirdBodyPerturbationModel` (Sun/Moon direct + indirect terms via JPL ephemerides).
+- SRP is exposed via `astroforces::srp::SrpAccelerationModel` and `astroforces::srp::SrpPerturbationModel`.
+- Drag and SRP both use the shared surface-force kernel (`astroforces::forces::evaluate_surface_force`) for cannonball/macro area+coefficient handling.
+
+SRP single-state CLI:
+```bash
+./build/macos-debug/srp_cli 6778137 0 0 0 7670 0 1000000000 /path/to/linux_p1550p2650.440 600 4 1.3 0
+```
+
+SRP batch CLI:
+```bash
+./build/macos-debug/srp_batch_cli input_eci.csv srp_output.csv /path/to/linux_p1550p2650.440 600 4 1.3 0
+```
+Output schema reference: `docs/SRP_OUTPUT_SCHEMA.md`
 
 Perturbation-vs-altitude profiling:
 ```bash

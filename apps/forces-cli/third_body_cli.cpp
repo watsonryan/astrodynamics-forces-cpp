@@ -10,7 +10,7 @@
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
-#include "dragcpp/forces/third_body.hpp"
+#include "astroforces/forces/third_body.hpp"
 
 namespace {
 

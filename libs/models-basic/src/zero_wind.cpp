@@ -4,7 +4,7 @@
  * @author Watosn
  */
 
-#include "dragcpp/models/exponential_atmosphere.hpp"
+#include "astroforces/models/exponential_atmosphere.hpp"
 
 namespace astroforces::models {
 
