@@ -18,6 +18,9 @@ cmake --build --preset macos-debug
 ctest --preset macos-debug --output-on-failure
 ```
 
+External model repos are pulled via CPM with HTTPS URLs by default; override cache vars
+`DRAGCPP_NRLMSIS21_REPO`, `DRAGCPP_DTM2020_REPO`, and `DRAGCPP_HWM14_REPO` if you prefer SSH.
+
 ## CLI
 ```bash
 ./build/macos-debug/drag_cli 6778137 0 0 0 7670 0 1000000000

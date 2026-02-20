@@ -5,9 +5,16 @@ project(drag_cpp VERSION 0.1.0 LANGUAGES CXX)
 option(DRAGCPP_BUILD_TESTS "Build tests" ON)
 option(DRAGCPP_WARNINGS_AS_ERRORS "Treat warnings as errors" ON)
 
+set(DRAGCPP_NRLMSIS21_REPO "https://github.com/watsonryan/nrlmsis-2_1.git" CACHE STRING "NRLMSIS 2.1 repo")
+set(DRAGCPP_DTM2020_REPO "https://github.com/watsonryan/dtm2020.git" CACHE STRING "DTM2020 repo")
+set(DRAGCPP_HWM14_REPO "https://github.com/watsonryan/hwm14.git" CACHE STRING "HWM14 repo")
+set(DRAGCPP_EXTERNAL_MODELS_TAG "main" CACHE STRING "Branch/tag for external model repos")
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+include(${CMAKE_SOURCE_DIR}/cmake/CPM.cmake)
 
 add_library(dragcpp_atmo_core INTERFACE)
 target_include_directories(dragcpp_atmo_core INTERFACE ${CMAKE_SOURCE_DIR}/libs/atmo-core/include)
@@ -34,15 +41,50 @@ target_include_directories(dragcpp_drag_core PUBLIC ${CMAKE_SOURCE_DIR}/libs/dra
 target_link_libraries(dragcpp_drag_core PUBLIC dragcpp_atmo_core dragcpp_sc_props)
 
 add_library(dragcpp_adapters STATIC
-  libs/adapters/src/placeholders.cpp)
+  libs/adapters/src/placeholders.cpp
+  libs/adapters/src/nrlmsis21_adapter.cpp
+  libs/adapters/src/dtm2020_adapter.cpp
+  libs/adapters/src/hwm14_adapter.cpp)
 target_include_directories(dragcpp_adapters PUBLIC ${CMAKE_SOURCE_DIR}/libs/adapters/include)
-target_link_libraries(dragcpp_adapters PUBLIC dragcpp_atmo_core)
+target_link_libraries(dragcpp_adapters PUBLIC
+  dragcpp_atmo_core
+  msis21::msis21
+  dtm2020::dtm2020
+  hwm14::hwm14)
+
+CPMAddPackage(
+  NAME nrlmsis21_ext
+  GIT_REPOSITORY ${DRAGCPP_NRLMSIS21_REPO}
+  GIT_TAG ${DRAGCPP_EXTERNAL_MODELS_TAG}
+  OPTIONS
+    "MSIS21_BUILD_TESTS OFF"
+    "MSIS21_BUILD_CLI OFF"
+)
+
+CPMAddPackage(
+  NAME dtm2020_ext
+  GIT_REPOSITORY ${DRAGCPP_DTM2020_REPO}
+  GIT_TAG ${DRAGCPP_EXTERNAL_MODELS_TAG}
+  OPTIONS
+    "DTM2020_BUILD_TESTS OFF"
+    "DTM2020_ENABLE_RESEARCH OFF"
+)
+
+CPMAddPackage(
+  NAME hwm14_ext
+  GIT_REPOSITORY ${DRAGCPP_HWM14_REPO}
+  GIT_TAG ${DRAGCPP_EXTERNAL_MODELS_TAG}
+  OPTIONS
+    "HWM14_BUILD_TESTS OFF"
+    "HWM14_BUILD_EXAMPLES OFF"
+)
 
 add_executable(drag_cli apps/drag-cli/main.cpp)
 target_link_libraries(drag_cli PRIVATE
   dragcpp_atmo_core
   dragcpp_space_weather
   dragcpp_sc_props
+  dragcpp_adapters
   dragcpp_models_basic
   dragcpp_drag_core)
 
@@ -80,4 +122,17 @@ if(DRAGCPP_BUILD_TESTS)
     dragcpp_models_basic
     dragcpp_drag_core)
   add_test(NAME DragEndToEnd COMMAND dragcpp_test_end_to_end)
+
+  add_executable(dragcpp_test_adapters tests/test_adapters_integration.cpp)
+  target_link_libraries(dragcpp_test_adapters PRIVATE
+    dragcpp_atmo_core
+    dragcpp_space_weather
+    dragcpp_sc_props
+    dragcpp_drag_core
+    dragcpp_adapters)
+  target_compile_definitions(dragcpp_test_adapters PRIVATE
+    DRAGCPP_NRLMSIS21_SOURCE_DIR="${nrlmsis21_ext_SOURCE_DIR}"
+    DRAGCPP_DTM2020_SOURCE_DIR="${dtm2020_ext_SOURCE_DIR}"
+    DRAGCPP_HWM14_SOURCE_DIR="${hwm14_ext_SOURCE_DIR}")
+  add_test(NAME DragAdaptersIntegration COMMAND dragcpp_test_adapters)
 endif()
