@@ -7,7 +7,8 @@
 #include <cmath>
 #include <algorithm>
 #include <filesystem>
-#include <iostream>
+
+#include <spdlog/spdlog.h>
 
 #include "dragcpp/adapters/dtm2020_adapter.hpp"
 #include "dragcpp/adapters/hwm14_adapter.hpp"
@@ -41,7 +42,7 @@ int main() {
   const auto hwm_data_dir = fs::path(DRAGCPP_HWM14_SOURCE_DIR) / "testdata";
 
   if (!fs::exists(nrl_parm) || !fs::exists(dtm_coeff) || !fs::exists(hwm_data_dir)) {
-    std::cerr << "adapter test data paths missing\n";
+    spdlog::error("adapter test data paths missing");
     return 10;
   }
 
@@ -56,7 +57,7 @@ int main() {
   const auto nrl = adapters::Nrlmsis21AtmosphereAdapter::Create({.parm_file = nrl_parm});
   const auto nrl_out = nrl->evaluate(state, wx);
   if (nrl_out.status != atmo::Status::Ok || !(nrl_out.density_kg_m3 > 0.0) || !std::isfinite(nrl_out.temperature_k)) {
-    std::cerr << "nrlmsis adapter evaluation failed\n";
+    spdlog::error("nrlmsis adapter evaluation failed");
     return 1;
   }
 
@@ -68,7 +69,7 @@ int main() {
   wx_hist.has_ap_msis_history = true;
   const auto nrl_hist_out = nrl->evaluate(state, wx_hist);
   if (nrl_hist_out.status != atmo::Status::Ok) {
-    std::cerr << "nrlmsis adapter history evaluation failed\n";
+    spdlog::error("nrlmsis adapter history evaluation failed");
     return 11;
   }
 
@@ -90,33 +91,33 @@ int main() {
   msis_in.has_ap_history = true;
   const auto msis_direct_hist = msis_model.evaluate(msis_in);
   if (msis_direct_hist.status != msis21::Status::Ok) {
-    std::cerr << "direct nrlmsis history evaluate failed\n";
+    spdlog::error("direct nrlmsis history evaluate failed");
     return 12;
   }
   if (!approx_rel(nrl_hist_out.density_kg_m3, msis_direct_hist.out.rho * 1000.0) ||
       !approx_rel(nrl_hist_out.temperature_k, msis_direct_hist.out.t)) {
-    std::cerr << "nrlmsis adapter parity mismatch for history mode\n";
+    spdlog::error("nrlmsis adapter parity mismatch for history mode");
     return 13;
   }
 
   msis_in.has_ap_history = false;
   const auto msis_direct_scalar = msis_model.evaluate(msis_in);
   if (msis_direct_scalar.status != msis21::Status::Ok) {
-    std::cerr << "direct nrlmsis scalar evaluate failed\n";
+    spdlog::error("direct nrlmsis scalar evaluate failed");
     return 14;
   }
 
   const auto dtm = adapters::Dtm2020AtmosphereAdapter::Create({.coeff_file = dtm_coeff});
   const auto dtm_out = dtm->evaluate(state, wx);
   if (dtm_out.status != atmo::Status::Ok || !(dtm_out.density_kg_m3 > 0.0) || !std::isfinite(dtm_out.temperature_k)) {
-    std::cerr << "dtm2020 adapter evaluation failed\n";
+    spdlog::error("dtm2020 adapter evaluation failed");
     return 2;
   }
 
   const auto hwm = adapters::Hwm14WindAdapter::Create({.data_dir = hwm_data_dir});
   const auto hwm_out = hwm->evaluate(state, wx);
   if (hwm_out.status != atmo::Status::Ok || hwm_out.frame != atmo::Frame::ECEF || !finite(hwm_out.velocity_mps)) {
-    std::cerr << "hwm14 adapter evaluation failed\n";
+    spdlog::error("hwm14 adapter evaluation failed");
     return 3;
   }
 
@@ -125,7 +126,7 @@ int main() {
   drag::DragAccelerationModel drag_model(weather, *nrl, *hwm);
   const auto drag_out = drag_model.evaluate(state, sc);
   if (drag_out.status != atmo::Status::Ok || !(drag_out.density_kg_m3 > 0.0) || !finite(drag_out.acceleration_mps2)) {
-    std::cerr << "adapter-backed drag pipeline failed\n";
+    spdlog::error("adapter-backed drag pipeline failed");
     return 4;
   }
 

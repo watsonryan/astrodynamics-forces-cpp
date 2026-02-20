@@ -5,9 +5,10 @@
  */
 
 #include <cmath>
-#include <iostream>
 #include <memory>
 #include <string>
+
+#include <spdlog/spdlog.h>
 
 #include "dragcpp/drag/drag_model.hpp"
 #include "dragcpp/drag/drag_perturbation.hpp"
@@ -60,7 +61,7 @@ int main() {
   drag::DragAccelerationModel drag_direct(weather, atmosphere, wind);
   const auto direct = drag_direct.evaluate(state, sc);
   if (direct.status != atmo::Status::Ok) {
-    std::cerr << "direct drag failed\n";
+    spdlog::error("direct drag failed");
     return 1;
   }
 
@@ -70,13 +71,13 @@ int main() {
 
   const auto result = stack.evaluate(forces::PerturbationRequest{.state = state, .spacecraft = &sc});
   if (result.status != atmo::Status::Ok || result.contributions.size() != 2U) {
-    std::cerr << "stack evaluation failed\n";
+    spdlog::error("stack evaluation failed");
     return 2;
   }
   if (!approx(result.contributions[0].acceleration_mps2.x, direct.acceleration_mps2.x) ||
       !approx(result.contributions[0].acceleration_mps2.y, direct.acceleration_mps2.y) ||
       !approx(result.contributions[0].acceleration_mps2.z, direct.acceleration_mps2.z)) {
-    std::cerr << "drag contribution mismatch\n";
+    spdlog::error("drag contribution mismatch");
     return 3;
   }
 
@@ -85,14 +86,14 @@ int main() {
   if (!approx(result.total_acceleration_mps2.x, expected_total.x) ||
       !approx(result.total_acceleration_mps2.y, expected_total.y) ||
       !approx(result.total_acceleration_mps2.z, expected_total.z)) {
-    std::cerr << "total acceleration mismatch\n";
+    spdlog::error("total acceleration mismatch");
     return 4;
   }
 
   const drag::DragPerturbationModel drag_no_default(weather, atmosphere, wind, nullptr, "drag_nodefault");
   const auto missing_sc = drag_no_default.evaluate(forces::PerturbationRequest{.state = state, .spacecraft = nullptr});
   if (missing_sc.status != atmo::Status::InvalidInput) {
-    std::cerr << "missing spacecraft should fail\n";
+    spdlog::error("missing spacecraft should fail");
     return 5;
   }
 

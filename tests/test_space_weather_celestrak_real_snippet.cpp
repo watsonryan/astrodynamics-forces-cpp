@@ -6,7 +6,8 @@
 
 #include <cmath>
 #include <filesystem>
-#include <iostream>
+
+#include <spdlog/spdlog.h>
 
 #include "dragcpp/atmo/types.hpp"
 #include "dragcpp/weather/celestrak_csv_provider.hpp"
@@ -24,23 +25,23 @@ int main() {
 
   const astroforces::atmo::WeatherIndices w = provider->at(astroforces::atmo::Epoch{.utc_seconds = 946684800.0});  // 2000-01-01
   if (w.status != astroforces::atmo::Status::Ok) {
-    std::cerr << "status\n";
+    spdlog::error("status");
     return 1;
   }
   if (!approx(w.f107, 130.1, 1e-12) || !approx(w.f107a, 131.0, 1e-12)) {
-    std::cerr << "f107 mismatch\n";
+    spdlog::error("f107 mismatch");
     return 2;
   }
   if (!approx(w.kp, 3.0, 1e-12) || !approx(w.ap, 24.0, 1e-12)) {
-    std::cerr << "daily geomag mismatch\n";
+    spdlog::error("daily geomag mismatch");
     return 3;
   }
   if (!approx(w.kp_3h_current, 4.3, 1e-12) || !approx(w.ap_3h_current, 56.0, 1e-12)) {
-    std::cerr << "3h geomag mismatch\n";
+    spdlog::error("3h geomag mismatch");
     return 4;
   }
   if (!w.f107_observed || !w.geomagnetic_observed) {
-    std::cerr << "quality flags mismatch\n";
+    spdlog::error("quality flags mismatch");
     return 5;
   }
   return 0;

@@ -6,8 +6,9 @@
 
 #include <chrono>
 #include <cstdlib>
-#include <iostream>
 #include <vector>
+
+#include <spdlog/spdlog.h>
 
 #include "dragcpp/drag/drag_model.hpp"
 #include "dragcpp/models/exponential_atmosphere.hpp"
@@ -33,7 +34,7 @@ int main() {
   const int samples = read_env_int("ASTRO_FORCES_PERF_SAMPLES", 40);
   const int iters = read_env_int("ASTRO_FORCES_PERF_ITERS", 5000);
   if (samples <= 0 || iters <= 0) {
-    std::cerr << "invalid perf env configuration\n";
+    spdlog::error("invalid perf env configuration");
     return 1;
   }
 
@@ -92,9 +93,9 @@ int main() {
   const double single_hz = 1.0e6 / single_mean_us;
   const double batch_hz = 1.0e6 / batch_mean_us;
 
-  std::cout << "drag_perf_benchmark\n";
-  std::cout << "samples=" << samples << " iters=" << iters << " sink=" << sink << "\n";
-  std::cout << "single_eval_mean_us=" << single_mean_us << " single_eval_hz=" << single_hz << "\n";
-  std::cout << "batch_eval_mean_us=" << batch_mean_us << " batch_eval_hz=" << batch_hz << "\n";
+  spdlog::info("drag_perf_benchmark");
+  spdlog::info("samples={} iters={} sink={}", samples, iters, sink);
+  spdlog::info("single_eval_mean_us={} single_eval_hz={}", single_mean_us, single_hz);
+  spdlog::info("batch_eval_mean_us={} batch_eval_hz={}", batch_mean_us, batch_hz);
   return 0;
 }

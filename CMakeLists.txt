@@ -24,6 +24,18 @@ CPMAddPackage(
   GIT_REPOSITORY ${DRAGCPP_EIGEN_REPO}
   GIT_TAG ${DRAGCPP_EIGEN_TAG}
 )
+CPMAddPackage(
+  NAME fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+  GIT_TAG 10.2.1
+)
+CPMAddPackage(
+  NAME spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG v1.14.1
+  OPTIONS
+    "SPDLOG_FMT_EXTERNAL ON"
+)
 
 set(DRAGCPP_EIGEN_TARGET "")
 if(TARGET Eigen3::Eigen)
@@ -34,6 +46,7 @@ endif()
 
 add_library(dragcpp_atmo_core INTERFACE)
 target_include_directories(dragcpp_atmo_core INTERFACE ${CMAKE_SOURCE_DIR}/libs/atmo-core/include)
+target_link_libraries(dragcpp_atmo_core INTERFACE fmt::fmt spdlog::spdlog)
 
 add_library(dragcpp_space_weather STATIC
   libs/space-weather/src/static_provider.cpp

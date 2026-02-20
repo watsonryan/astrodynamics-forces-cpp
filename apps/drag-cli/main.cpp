@@ -5,9 +5,11 @@
  */
 
 #include <cstdlib>
-#include <iostream>
 #include <memory>
 #include <string>
+
+#include <fmt/format.h>
+#include <spdlog/spdlog.h>
 
 #include "dragcpp/adapters/dtm2020_adapter.hpp"
 #include "dragcpp/adapters/hwm14_adapter.hpp"
@@ -20,10 +22,10 @@
 
 int main(int argc, char** argv) {
   if (argc < 8 || argc > 13) {
-    std::cerr << "usage: drag_cli <x_m> <y_m> <z_m> <vx_mps> <vy_mps> <vz_mps> <epoch_utc_s> [model] [model_data] [wind] [wind_data] [weather_csv]\n";
-    std::cerr << "models: basic | nrlmsis | dtm2020\n";
-    std::cerr << "wind: zero | hwm14\n";
-    std::cerr << "weather_csv: CelesTrak SW-Last5Years.csv (optional)\n";
+    spdlog::error("usage: drag_cli <x_m> <y_m> <z_m> <vx_mps> <vy_mps> <vz_mps> <epoch_utc_s> [model] [model_data] [wind] [wind_data] [weather_csv]");
+    spdlog::error("models: basic | nrlmsis | dtm2020");
+    spdlog::error("wind: zero | hwm14");
+    spdlog::error("weather_csv: CelesTrak SW-Last5Years.csv (optional)");
     return 1;
   }
 
@@ -77,17 +79,16 @@ const std::string wind_data = (argc >= 12) ? argv[11] : "";
   const auto result = model.evaluate(state, sc);
 
   if (result.status != astroforces::atmo::Status::Ok) {
-    std::cerr << "drag eval failed\n";
+    spdlog::error("drag eval failed");
     return 2;
   }
 
-  std::cout << "ax=" << result.acceleration_mps2.x << " ay=" << result.acceleration_mps2.y
-            << " az=" << result.acceleration_mps2.z << "\n";
-  std::cout << "rho=" << result.density_kg_m3 << " temp_k=" << result.temperature_k << " vrel_mps=" << result.relative_speed_mps
-            << " q_pa=" << result.dynamic_pressure_pa << " area=" << result.area_m2 << " cd_eff=" << result.cd << "\n";
-  std::cout << "wx_source=" << static_cast<int>(result.weather.source) << " wx_interp=" << (result.weather.interpolated ? 1 : 0)
-            << " wx_extrap=" << (result.weather.extrapolated ? 1 : 0) << " f107=" << result.weather.f107
-            << " f107a=" << result.weather.f107a << " ap=" << result.weather.ap << " kp=" << result.weather.kp
-            << " ap3h=" << result.weather.ap_3h_current << " kp3h=" << result.weather.kp_3h_current << "\n";
+  fmt::print("ax={} ay={} az={}\n", result.acceleration_mps2.x, result.acceleration_mps2.y, result.acceleration_mps2.z);
+  fmt::print("rho={} temp_k={} vrel_mps={} q_pa={} area={} cd_eff={}\n", result.density_kg_m3, result.temperature_k,
+             result.relative_speed_mps, result.dynamic_pressure_pa, result.area_m2, result.cd);
+  fmt::print("wx_source={} wx_interp={} wx_extrap={} f107={} f107a={} ap={} kp={} ap3h={} kp3h={}\n",
+             static_cast<int>(result.weather.source), result.weather.interpolated ? 1 : 0, result.weather.extrapolated ? 1 : 0,
+             result.weather.f107, result.weather.f107a, result.weather.ap, result.weather.kp, result.weather.ap_3h_current,
+             result.weather.kp_3h_current);
   return 0;
 }

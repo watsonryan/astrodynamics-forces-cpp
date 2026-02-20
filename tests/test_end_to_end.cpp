@@ -4,7 +4,7 @@
  * @author Watosn
  */
 
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 #include "dragcpp/drag/drag_model.hpp"
 #include "dragcpp/models/exponential_atmosphere.hpp"
@@ -30,11 +30,11 @@ int main() {
 
   const auto out = model.evaluate(state, sc);
   if (out.status != atmo::Status::Ok) {
-    std::cerr << "pipeline failed\n";
+    spdlog::error("pipeline failed");
     return 1;
   }
   if (!(out.density_kg_m3 > 0.0)) {
-    std::cerr << "density invalid\n";
+    spdlog::error("density invalid");
     return 2;
   }
   return 0;

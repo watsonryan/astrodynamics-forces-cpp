@@ -5,7 +5,8 @@
  */
 
 #include <cmath>
-#include <iostream>
+
+#include <spdlog/spdlog.h>
 
 #include "dragcpp/drag/drag_model.hpp"
 #include "dragcpp/models/exponential_atmosphere.hpp"
@@ -39,21 +40,21 @@ int main() {
 
   const auto out = model.evaluate(state, sc);
   if (out.status != atmo::Status::Ok) {
-    std::cerr << "status failed\n";
+    spdlog::error("status failed");
     return 1;
   }
 
   const double expected_ax = -0.5 * 1.225 * 2.0 * 10.0 / 1000.0 * 7500.0 * 7500.0;
   if (!approx(out.acceleration_mps2.x, expected_ax, 1e-12)) {
-    std::cerr << "ax mismatch\n";
+    spdlog::error("ax mismatch");
     return 2;
   }
   if (!approx(out.acceleration_mps2.y, 0.0, 1e-12) || !approx(out.acceleration_mps2.z, 0.0, 1e-12)) {
-    std::cerr << "vector mismatch\n";
+    spdlog::error("vector mismatch");
     return 3;
   }
   if (!approx(out.relative_speed_mps, 7500.0, 1e-12) || !approx(out.dynamic_pressure_pa, 0.5 * 1.225 * 7500.0 * 7500.0, 1e-12)) {
-    std::cerr << "derived drag scalars mismatch\n";
+    spdlog::error("derived drag scalars mismatch");
     return 7;
   }
 
@@ -72,7 +73,7 @@ int main() {
   state_identity.body_from_frame_dcm = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
   const auto macro_identity = model.evaluate(state_identity, macro_sc);
   if (macro_identity.status != atmo::Status::Ok || !approx(macro_identity.area_m2, 2.0, 1e-12) || !approx(macro_identity.cd, 2.5, 1e-12)) {
-    std::cerr << "macro identity area mismatch\n";
+    spdlog::error("macro identity area mismatch");
     return 4;
   }
 
@@ -80,12 +81,12 @@ int main() {
   state_rot.body_from_frame_dcm = {0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0};  // +90deg yaw
   const auto macro_rot = model.evaluate(state_rot, macro_sc);
   if (macro_rot.status != atmo::Status::Ok || !approx(macro_rot.area_m2, 4.0, 1e-12) || !approx(macro_rot.cd, 3.5, 1e-12)) {
-    std::cerr << "macro rotated area mismatch\n";
+    spdlog::error("macro rotated area mismatch");
     return 5;
   }
 
   if (!approx(out.area_m2, 10.0, 1e-12)) {
-    std::cerr << "cannonball area mismatch\n";
+    spdlog::error("cannonball area mismatch");
     return 6;
   }
 
@@ -100,7 +101,7 @@ int main() {
   };
   const auto aero_out = model.evaluate(state_identity, aero_sc);
   if (aero_out.status != atmo::Status::Ok || !(aero_out.cd > 2.0)) {
-    std::cerr << "surface aero modifier mismatch\n";
+    spdlog::error("surface aero modifier mismatch");
     return 8;
   }
 

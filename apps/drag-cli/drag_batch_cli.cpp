@@ -7,12 +7,13 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <ctime>
 #include <vector>
+
+#include <spdlog/spdlog.h>
 
 #include "dragcpp/adapters/dtm2020_adapter.hpp"
 #include "dragcpp/adapters/hwm14_adapter.hpp"
@@ -87,9 +88,8 @@ bool parse_sample_row(const std::string& line, SampleRow& out) {
 
 int main(int argc, char** argv) {
   if (argc < 4 || argc > 9) {
-    std::cerr << "usage: drag_batch_cli <input_csv> <output_file> <format:csv|json> "
-                 "[model] [model_data] [wind] [wind_data] [weather_csv]\n";
-    std::cerr << "input row: epoch_utc_s,x_m,y_m,z_m,vx_mps,vy_mps,vz_mps\n";
+    spdlog::error("usage: drag_batch_cli <input_csv> <output_file> <format:csv|json> [model] [model_data] [wind] [wind_data] [weather_csv]");
+    spdlog::error("input row: epoch_utc_s,x_m,y_m,z_m,vx_mps,vy_mps,vz_mps");
     return 1;
   }
 
@@ -102,18 +102,18 @@ int main(int argc, char** argv) {
   const std::string wind_data = (argc >= 8) ? argv[7] : "";
   const std::string weather_csv = (argc >= 9) ? argv[8] : "";
   if (format != "csv" && format != "json") {
-    std::cerr << "format must be csv or json\n";
+    spdlog::error("format must be csv or json");
     return 4;
   }
 
   std::ifstream in(input_path);
   if (!in) {
-    std::cerr << "failed to open input csv: " << input_path << "\n";
+    spdlog::error("failed to open input csv: {}", input_path.string());
     return 2;
   }
   std::ofstream out(output_path);
   if (!out) {
-    std::cerr << "failed to open output file: " << output_path << "\n";
+    spdlog::error("failed to open output file: {}", output_path.string());
     return 3;
   }
 
@@ -176,7 +176,7 @@ int main(int argc, char** argv) {
       if (line_no == 1 && line.find("epoch_utc_s") != std::string::npos) {
         continue;
       }
-      std::cerr << "skipping malformed row " << line_no << "\n";
+      spdlog::warn("skipping malformed row {}", line_no);
       continue;
     }
 

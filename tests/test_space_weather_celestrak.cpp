@@ -7,7 +7,8 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
+
+#include <spdlog/spdlog.h>
 
 #include "dragcpp/atmo/types.hpp"
 #include "dragcpp/weather/celestrak_csv_provider.hpp"
@@ -36,7 +37,7 @@ int main() {
   namespace fs = std::filesystem;
   const auto csv = fs::temp_directory_path() / "dragcpp_celestrak_test.csv";
   if (!write_csv(csv)) {
-    std::cerr << "failed to write csv\n";
+    spdlog::error("failed to write csv");
     return 10;
   }
 
@@ -47,7 +48,7 @@ int main() {
       !approx(w0.ap, 6.0, 1e-12) || !approx(w0.kp, 1.0, 1e-12) || !approx(w0.kp_3h_current, 1.0, 1e-12) ||
       !approx(w0.ap_3h_current, 6.0, 1e-12) || w0.has_ap_msis_history || !w0.f107_observed ||
       w0.source != astroforces::atmo::WeatherSource::CelesTrakLast5YearsCsv) {
-    std::cerr << "exact day lookup failed\n";
+    spdlog::error("exact day lookup failed");
     return 1;
   }
 
@@ -56,20 +57,20 @@ int main() {
   if (wm.status != astroforces::atmo::Status::Ok || !wm.interpolated || wm.extrapolated || !approx(wm.f107, 130.0, 1e-12) ||
       !approx(wm.f107a, 140.0, 1e-12) || !approx(wm.ap, 6.5, 1e-12) || !approx(wm.kp, 1.5, 1e-12) ||
       !approx(wm.kp_3h_current, 1.0, 1e-12)) {
-    std::cerr << "interpolation failed\n";
+    spdlog::error("interpolation failed");
     return 2;
   }
 
   const astroforces::atmo::WeatherIndices wb = provider->at(astroforces::atmo::Epoch{.utc_seconds = 1767139200.0});  // 2025-12-31
   if (wb.status != astroforces::atmo::Status::Ok || !wb.extrapolated || !approx(wb.f107, 120.0, 1e-12)) {
-    std::cerr << "low-side clamp failed\n";
+    spdlog::error("low-side clamp failed");
     return 3;
   }
 
   const astroforces::atmo::WeatherIndices wa = provider->at(astroforces::atmo::Epoch{.utc_seconds = 1767603600.0});  // 2026-01-05 09:00:00
   if (wa.status != astroforces::atmo::Status::Ok || wa.extrapolated || !wa.has_ap_msis_history ||
       !approx(wa.ap_msis_history[0], 10.0, 1e-12) || !approx(wa.kp_3h_current, 5.0, 1e-12) || wa.f107_observed) {
-    std::cerr << "high-side clamp failed\n";
+    spdlog::error("high-side clamp failed");
     return 4;
   }
 
