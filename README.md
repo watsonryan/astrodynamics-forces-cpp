@@ -14,9 +14,11 @@ flowchart LR
   C --> E
   D --> E
   E --> F
+  T[third-body<br/>Sun+Moon via jplEphem] --> F
   F --> G[apps/drag-cli]
   F --> H[apps/drag_batch_cli]
   I[external repos via CPM] --> D
+  I --> T
   I --> B
 ```
 
@@ -73,6 +75,7 @@ General perturbation interface:
 - Use `dragcpp::forces::IPerturbationModel` for each force source.
 - Combine models with `dragcpp::forces::PerturbationStack`.
 - Drag is exposed as `dragcpp::drag::DragPerturbationModel` and plugs directly into the same stack used for future gravity/SRP/third-body models.
+- Third-body is exposed as `dragcpp::forces::ThirdBodyPerturbationModel` (Sun/Moon direct + indirect terms via JPL ephemerides).
 
 Performance benchmark:
 ```bash

@@ -50,4 +50,8 @@ inline double local_solar_time_hours(double utc_seconds, double lon_deg) {
   return stl;
 }
 
+inline double utc_seconds_to_julian_date_utc(double utc_seconds) {
+  return utc_seconds / 86400.0 + 2440587.5;
+}
+
 }  // namespace dragcpp::atmo

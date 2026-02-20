@@ -8,6 +8,7 @@ option(DRAGCPP_WARNINGS_AS_ERRORS "Treat warnings as errors" ON)
 set(DRAGCPP_NRLMSIS21_REPO "https://github.com/watsonryan/nrlmsis-2_1.git" CACHE STRING "NRLMSIS 2.1 repo")
 set(DRAGCPP_DTM2020_REPO "https://github.com/watsonryan/dtm2020.git" CACHE STRING "DTM2020 repo")
 set(DRAGCPP_HWM14_REPO "https://github.com/watsonryan/hwm14.git" CACHE STRING "HWM14 repo")
+set(DRAGCPP_JPL_EPH_REPO "https://github.com/watsonryan/jplEphem.git" CACHE STRING "jplEphem repo")
 set(DRAGCPP_EXTERNAL_MODELS_TAG "main" CACHE STRING "Branch/tag for external model repos")
 
 set(CMAKE_CXX_STANDARD 20)
@@ -54,7 +55,8 @@ target_link_libraries(dragcpp_models_basic PUBLIC dragcpp_atmo_core)
 add_library(dragcpp_drag_core STATIC
   libs/drag-core/src/drag_model.cpp
   libs/drag-core/src/drag_perturbation.cpp
-  libs/drag-core/src/perturbation.cpp)
+  libs/drag-core/src/perturbation.cpp
+  libs/drag-core/src/third_body.cpp)
 target_include_directories(dragcpp_drag_core PUBLIC ${CMAKE_SOURCE_DIR}/libs/drag-core/include)
 target_link_libraries(dragcpp_drag_core PUBLIC dragcpp_atmo_core dragcpp_sc_props)
 if(DRAGCPP_EIGEN_TARGET)
@@ -99,6 +101,18 @@ CPMAddPackage(
     "HWM14_BUILD_TESTS OFF"
     "HWM14_BUILD_EXAMPLES OFF"
 )
+
+CPMAddPackage(
+  NAME jpl_eph_ext
+  GIT_REPOSITORY ${DRAGCPP_JPL_EPH_REPO}
+  GIT_TAG ${DRAGCPP_EXTERNAL_MODELS_TAG}
+  OPTIONS
+    "JPL_EPH_BUILD_TESTS OFF"
+    "JPL_EPH_BUILD_TOOLS OFF"
+    "JPL_EPH_FETCH_DEPS OFF"
+)
+
+target_link_libraries(dragcpp_drag_core PRIVATE jpl::eph)
 
 add_executable(drag_cli apps/drag-cli/main.cpp)
 target_link_libraries(drag_cli PRIVATE
@@ -195,4 +209,12 @@ if(DRAGCPP_BUILD_TESTS)
     dragcpp_sc_props
     dragcpp_models_basic
     dragcpp_drag_core)
+
+  add_executable(dragcpp_test_third_body tests/test_third_body.cpp)
+  target_link_libraries(dragcpp_test_third_body PRIVATE
+    dragcpp_atmo_core
+    dragcpp_sc_props
+    dragcpp_drag_core)
+  target_compile_definitions(dragcpp_test_third_body PRIVATE DRAGCPP_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
+  add_test(NAME ThirdBody COMMAND dragcpp_test_third_body)
 endif()
