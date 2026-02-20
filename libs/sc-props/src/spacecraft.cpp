@@ -21,7 +21,15 @@ AeroProjection projected_area_and_cd(const SpacecraftProperties& sc, const dragc
     const double c = -dragcpp::atmo::dot(s.normal_body, flow_dir_body);
     const double proj = s.area_m2 * std::max(0.0, c);
     area += proj;
-    const double cd_surface = (s.cd > 0.0) ? s.cd : sc.cd;
+    const double cd_base = (s.cd > 0.0) ? s.cd : sc.cd;
+    double cd_surface = cd_base;
+    if (s.specularity > 0.0 || s.accommodation > 0.0) {
+      const double incidence = std::clamp(c, 0.0, 1.0);
+      const double spec = std::clamp(s.specularity, 0.0, 1.0);
+      const double accom = std::clamp(s.accommodation, 0.0, 1.0);
+      const double modifier = 1.0 + 0.25 * accom * (1.0 + incidence) - 0.15 * spec * (1.0 - incidence);
+      cd_surface = cd_base * modifier;
+    }
     weighted_cd += cd_surface * proj;
   }
   const double cd_effective = (area > 0.0) ? (weighted_cd / area) : sc.cd;

@@ -89,5 +89,20 @@ int main() {
     return 6;
   }
 
+  sc::SpacecraftProperties aero_sc{
+      .mass_kg = 1000.0,
+      .reference_area_m2 = 99.0,
+      .cd = 2.0,
+      .use_surface_model = true,
+      .surfaces = {
+          sc::Surface{.normal_body = atmo::Vec3{-1.0, 0.0, 0.0}, .area_m2 = 2.0, .cd = 2.0, .specularity = 0.0, .accommodation = 1.0},
+      },
+  };
+  const auto aero_out = model.evaluate(state_identity, aero_sc);
+  if (aero_out.status != atmo::Status::Ok || !(aero_out.cd > 2.0)) {
+    std::cerr << "surface aero modifier mismatch\n";
+    return 8;
+  }
+
   return 0;
 }
