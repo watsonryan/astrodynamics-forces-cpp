@@ -1,0 +1,105 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "DRAGCPP_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "base-debug",
+      "hidden": true,
+      "inherits": ["base"],
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "base-release",
+      "hidden": true,
+      "inherits": ["base"],
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "base-asan",
+      "hidden": true,
+      "inherits": ["base-debug"],
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-fsanitize=address -fno-omit-frame-pointer",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address",
+        "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address"
+      }
+    },
+    {
+      "name": "base-ubsan",
+      "hidden": true,
+      "inherits": ["base-debug"],
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-fsanitize=undefined -fno-omit-frame-pointer",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=undefined",
+        "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=undefined"
+      }
+    },
+    {
+      "name": "base-profile",
+      "hidden": true,
+      "inherits": ["base-release"],
+      "cacheVariables": { "CMAKE_CXX_FLAGS_RELEASE": "-O2 -g -fno-omit-frame-pointer" }
+    },
+
+    { "name": "macos-debug", "inherits": ["base-debug"] },
+    { "name": "macos-release", "inherits": ["base-release"] },
+    { "name": "macos-asan", "inherits": ["base-asan"] },
+    { "name": "macos-ubsan", "inherits": ["base-ubsan"] },
+    { "name": "macos-profile", "inherits": ["base-profile"] },
+
+    { "name": "linux-debug", "inherits": ["base-debug"] },
+    { "name": "linux-release", "inherits": ["base-release"] },
+    { "name": "linux-asan", "inherits": ["base-asan"] },
+    { "name": "linux-ubsan", "inherits": ["base-ubsan"] },
+    { "name": "linux-profile", "inherits": ["base-profile"] },
+
+    { "name": "windows-debug", "inherits": ["base-debug"] },
+    { "name": "windows-release", "inherits": ["base-release"] },
+    {
+      "name": "windows-asan",
+      "inherits": ["base-debug"],
+      "cacheVariables": { "CMAKE_CXX_FLAGS": "/fsanitize=address" }
+    },
+    { "name": "windows-profile", "inherits": ["base-profile"] }
+  ],
+  "buildPresets": [
+    { "name": "macos-debug", "configurePreset": "macos-debug" },
+    { "name": "macos-release", "configurePreset": "macos-release" },
+    { "name": "macos-asan", "configurePreset": "macos-asan" },
+    { "name": "macos-ubsan", "configurePreset": "macos-ubsan" },
+    { "name": "macos-profile", "configurePreset": "macos-profile" },
+
+    { "name": "linux-debug", "configurePreset": "linux-debug" },
+    { "name": "linux-release", "configurePreset": "linux-release" },
+    { "name": "linux-asan", "configurePreset": "linux-asan" },
+    { "name": "linux-ubsan", "configurePreset": "linux-ubsan" },
+    { "name": "linux-profile", "configurePreset": "linux-profile" },
+
+    { "name": "windows-debug", "configurePreset": "windows-debug" },
+    { "name": "windows-release", "configurePreset": "windows-release" },
+    { "name": "windows-asan", "configurePreset": "windows-asan" },
+    { "name": "windows-profile", "configurePreset": "windows-profile" }
+  ],
+  "testPresets": [
+    { "name": "macos-debug", "configurePreset": "macos-debug", "output": { "outputOnFailure": true } },
+    { "name": "macos-asan", "configurePreset": "macos-asan", "output": { "outputOnFailure": true } },
+    { "name": "macos-ubsan", "configurePreset": "macos-ubsan", "output": { "outputOnFailure": true } },
+
+    { "name": "linux-debug", "configurePreset": "linux-debug", "output": { "outputOnFailure": true } },
+    { "name": "linux-asan", "configurePreset": "linux-asan", "output": { "outputOnFailure": true } },
+    { "name": "linux-ubsan", "configurePreset": "linux-ubsan", "output": { "outputOnFailure": true } },
+
+    { "name": "windows-debug", "configurePreset": "windows-debug", "output": { "outputOnFailure": true } },
+    { "name": "windows-asan", "configurePreset": "windows-asan", "output": { "outputOnFailure": true } }
+  ]
+}

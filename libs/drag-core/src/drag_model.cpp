@@ -1,0 +1,55 @@
+/**
+ * @file drag_model.cpp
+ * @brief Drag acceleration pipeline implementation.
+ * @author Watosn
+ */
+
+#include "dragcpp/drag/drag_model.hpp"
+
+#include <cmath>
+
+namespace dragcpp::drag {
+
+DragResult DragAccelerationModel::evaluate(const dragcpp::atmo::StateVector& state,
+                                           const dragcpp::sc::SpacecraftProperties& sc) const {
+  if (sc.mass_kg <= 0.0) {
+    return DragResult{.status = dragcpp::atmo::Status::InvalidInput};
+  }
+
+  const auto w = weather_.at(state.epoch);
+  if (w.status != dragcpp::atmo::Status::Ok) {
+    return DragResult{.status = w.status};
+  }
+
+  const auto a = atmosphere_.evaluate(state, w);
+  if (a.status != dragcpp::atmo::Status::Ok || a.density_kg_m3 < 0.0) {
+    return DragResult{.status = a.status};
+  }
+
+  const auto wind = wind_.evaluate(state, w);
+  if (wind.status != dragcpp::atmo::Status::Ok || wind.frame != state.frame) {
+    return DragResult{.status = dragcpp::atmo::Status::InvalidInput};
+  }
+
+  const auto vrel = state.velocity_mps - wind.velocity_mps;
+  const double speed = dragcpp::atmo::norm(vrel);
+  if (!std::isfinite(speed)) {
+    return DragResult{.status = dragcpp::atmo::Status::NumericalError};
+  }
+
+  const dragcpp::atmo::Vec3 flow_dir_body = (speed > 0.0) ? (vrel / speed) : dragcpp::atmo::Vec3{};
+  const double area = dragcpp::sc::projected_area_m2(sc, flow_dir_body);
+  const double cd = sc.cd;
+
+  const double coeff = -0.5 * a.density_kg_m3 * cd * area / sc.mass_kg;
+  const auto accel = coeff * speed * vrel;
+
+  return DragResult{.acceleration_mps2 = accel,
+                    .relative_velocity_mps = vrel,
+                    .density_kg_m3 = a.density_kg_m3,
+                    .area_m2 = area,
+                    .cd = cd,
+                    .status = dragcpp::atmo::Status::Ok};
+}
+
+}  // namespace dragcpp::drag
