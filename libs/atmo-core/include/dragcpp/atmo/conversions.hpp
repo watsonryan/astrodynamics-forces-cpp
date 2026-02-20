@@ -9,9 +9,10 @@
 #include <ctime>
 #include <utility>
 
+#include "dragcpp/atmo/constants.hpp"
 #include "dragcpp/atmo/types.hpp"
 
-namespace dragcpp::atmo {
+namespace astroforces::atmo {
 
 inline GeodeticPoint spherical_geodetic_from_ecef(const Vec3& ecef_m) {
   constexpr double kPi = 3.1415926535897932384626433832795;
@@ -21,8 +22,7 @@ inline GeodeticPoint spherical_geodetic_from_ecef(const Vec3& ecef_m) {
   }
   const double lat = std::asin(ecef_m.z / r) * 180.0 / kPi;
   const double lon = std::atan2(ecef_m.y, ecef_m.x) * 180.0 / kPi;
-  constexpr double kEarthRadiusM = 6378137.0;
-  return GeodeticPoint{.lat_deg = lat, .lon_deg = lon, .alt_m = r - kEarthRadiusM};
+  return GeodeticPoint{.lat_deg = lat, .lon_deg = lon, .alt_m = r - constants::kEarthRadiusWgs84M};
 }
 
 inline std::pair<int, double> utc_seconds_to_iyd_sec(double utc_seconds) {
@@ -54,4 +54,4 @@ inline double utc_seconds_to_julian_date_utc(double utc_seconds) {
   return utc_seconds / 86400.0 + 2440587.5;
 }
 
-}  // namespace dragcpp::atmo
+}  // namespace astroforces::atmo

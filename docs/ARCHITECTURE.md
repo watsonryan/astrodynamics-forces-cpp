@@ -10,9 +10,9 @@
 - `apps/drag-cli`: executable entrypoint
 
 ## Force Abstraction
-- `dragcpp::forces::IPerturbationModel`: common force contribution interface.
-- `dragcpp::forces::PerturbationStack`: additive combiner for all perturbation models.
-- `dragcpp::drag::DragPerturbationModel`: drag implementation of the generic interface.
+- `astroforces::forces::IPerturbationModel`: common force contribution interface.
+- `astroforces::forces::PerturbationStack`: additive combiner for all perturbation models.
+- `astroforces::drag::DragPerturbationModel`: drag implementation of the generic interface.
 
 ## Design Rules
 - Preserve model kernels when integrating external repos.

@@ -6,17 +6,17 @@
 
 #include "dragcpp/drag/drag_perturbation.hpp"
 
-namespace dragcpp::drag {
+namespace astroforces::drag {
 
-dragcpp::forces::PerturbationContribution DragPerturbationModel::evaluate(
-    const dragcpp::forces::PerturbationRequest& request) const {
-  dragcpp::forces::PerturbationContribution out{};
+astroforces::forces::PerturbationContribution DragPerturbationModel::evaluate(
+    const astroforces::forces::PerturbationRequest& request) const {
+  astroforces::forces::PerturbationContribution out{};
   out.name = name_;
-  out.type = dragcpp::forces::PerturbationType::Drag;
+  out.type = astroforces::forces::PerturbationType::Drag;
 
   const auto* sc = request.spacecraft ? request.spacecraft : default_spacecraft_;
   if (!sc) {
-    out.status = dragcpp::atmo::Status::InvalidInput;
+    out.status = astroforces::atmo::Status::InvalidInput;
     return out;
   }
 
@@ -26,4 +26,4 @@ dragcpp::forces::PerturbationContribution DragPerturbationModel::evaluate(
   return out;
 }
 
-}  // namespace dragcpp::drag
+}  // namespace astroforces::drag

@@ -16,7 +16,7 @@ class Ephemeris;
 class Workspace;
 }
 
-namespace dragcpp::forces {
+namespace astroforces::forces {
 
 class ThirdBodyPerturbationModel final : public IPerturbationModel {
  public:
@@ -41,4 +41,4 @@ class ThirdBodyPerturbationModel final : public IPerturbationModel {
   mutable std::shared_ptr<jpl::eph::Workspace> workspace_{};
 };
 
-}  // namespace dragcpp::forces
+}  // namespace astroforces::forces

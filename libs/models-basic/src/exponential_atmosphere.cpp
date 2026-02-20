@@ -8,15 +8,16 @@
 
 #include <cmath>
 
-namespace dragcpp::models {
+#include "dragcpp/atmo/constants.hpp"
 
-dragcpp::atmo::AtmosphereSample ExponentialAtmosphereModel::evaluate(const dragcpp::atmo::StateVector& state,
-                                                                      const dragcpp::atmo::WeatherIndices& /*weather*/) const {
-  const double r = dragcpp::atmo::norm(state.position_m);
-  constexpr double kEarthRadiusM = 6378137.0;
-  const double alt = r - kEarthRadiusM;
+namespace astroforces::models {
+
+astroforces::atmo::AtmosphereSample ExponentialAtmosphereModel::evaluate(const astroforces::atmo::StateVector& state,
+                                                                      const astroforces::atmo::WeatherIndices& /*weather*/) const {
+  const double r = astroforces::atmo::norm(state.position_m);
+  const double alt = r - astroforces::atmo::constants::kEarthRadiusWgs84M;
   const double rho = rho0_ * std::exp(-(alt - h0_) / hs_);
-  return dragcpp::atmo::AtmosphereSample{.density_kg_m3 = rho, .temperature_k = t_, .status = dragcpp::atmo::Status::Ok};
+  return astroforces::atmo::AtmosphereSample{.density_kg_m3 = rho, .temperature_k = t_, .status = astroforces::atmo::Status::Ok};
 }
 
-}  // namespace dragcpp::models
+}  // namespace astroforces::models

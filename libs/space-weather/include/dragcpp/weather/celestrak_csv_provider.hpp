@@ -12,9 +12,9 @@
 
 #include "dragcpp/atmo/interfaces.hpp"
 
-namespace dragcpp::weather {
+namespace astroforces::weather {
 
-class CelesTrakCsvSpaceWeatherProvider final : public dragcpp::atmo::ISpaceWeatherProvider {
+class CelesTrakCsvSpaceWeatherProvider final : public astroforces::atmo::ISpaceWeatherProvider {
  public:
   struct DailySample {
     double day_start_utc_s{};
@@ -34,7 +34,7 @@ class CelesTrakCsvSpaceWeatherProvider final : public dragcpp::atmo::ISpaceWeath
 
   static std::unique_ptr<CelesTrakCsvSpaceWeatherProvider> Create(const Config& config);
 
-  [[nodiscard]] dragcpp::atmo::WeatherIndices at(const dragcpp::atmo::Epoch& epoch) const override;
+  [[nodiscard]] astroforces::atmo::WeatherIndices at(const astroforces::atmo::Epoch& epoch) const override;
 
  private:
   explicit CelesTrakCsvSpaceWeatherProvider(std::vector<DailySample> samples) : samples_(std::move(samples)) {}
@@ -42,4 +42,4 @@ class CelesTrakCsvSpaceWeatherProvider final : public dragcpp::atmo::ISpaceWeath
   std::vector<DailySample> samples_{};
 };
 
-}  // namespace dragcpp::weather
+}  // namespace astroforces::weather

@@ -25,28 +25,28 @@
 
 namespace {
 
-const char* status_to_string(dragcpp::atmo::Status s) {
+const char* status_to_string(astroforces::atmo::Status s) {
   switch (s) {
-    case dragcpp::atmo::Status::Ok:
+    case astroforces::atmo::Status::Ok:
       return "ok";
-    case dragcpp::atmo::Status::InvalidInput:
+    case astroforces::atmo::Status::InvalidInput:
       return "invalid_input";
-    case dragcpp::atmo::Status::NotImplemented:
+    case astroforces::atmo::Status::NotImplemented:
       return "not_implemented";
-    case dragcpp::atmo::Status::DataUnavailable:
+    case astroforces::atmo::Status::DataUnavailable:
       return "data_unavailable";
-    case dragcpp::atmo::Status::NumericalError:
+    case astroforces::atmo::Status::NumericalError:
       return "numerical_error";
     default:
       return "unknown";
   }
 }
 
-const char* weather_source_to_string(dragcpp::atmo::WeatherSource s) {
+const char* weather_source_to_string(astroforces::atmo::WeatherSource s) {
   switch (s) {
-    case dragcpp::atmo::WeatherSource::StaticProvider:
+    case astroforces::atmo::WeatherSource::StaticProvider:
       return "static";
-    case dragcpp::atmo::WeatherSource::CelesTrakLast5YearsCsv:
+    case astroforces::atmo::WeatherSource::CelesTrakLast5YearsCsv:
       return "celestrak_last5y";
     default:
       return "unknown";
@@ -55,8 +55,8 @@ const char* weather_source_to_string(dragcpp::atmo::WeatherSource s) {
 
 struct SampleRow {
   double epoch_utc_s{};
-  dragcpp::atmo::Vec3 position_m{};
-  dragcpp::atmo::Vec3 velocity_mps{};
+  astroforces::atmo::Vec3 position_m{};
+  astroforces::atmo::Vec3 velocity_mps{};
 };
 
 bool parse_sample_row(const std::string& line, SampleRow& out) {
@@ -78,8 +78,8 @@ bool parse_sample_row(const std::string& line, SampleRow& out) {
     return false;
   }
   out.epoch_utc_s = values[0];
-  out.position_m = dragcpp::atmo::Vec3{values[1], values[2], values[3]};
-  out.velocity_mps = dragcpp::atmo::Vec3{values[4], values[5], values[6]};
+  out.position_m = astroforces::atmo::Vec3{values[1], values[2], values[3]};
+  out.velocity_mps = astroforces::atmo::Vec3{values[4], values[5], values[6]};
   return true;
 }
 
@@ -117,38 +117,38 @@ int main(int argc, char** argv) {
     return 3;
   }
 
-  std::unique_ptr<dragcpp::atmo::ISpaceWeatherProvider> weather{};
+  std::unique_ptr<astroforces::atmo::ISpaceWeatherProvider> weather{};
   if (!weather_csv.empty()) {
-    weather = dragcpp::weather::CelesTrakCsvSpaceWeatherProvider::Create(
-        dragcpp::weather::CelesTrakCsvSpaceWeatherProvider::Config{.csv_file = weather_csv});
+    weather = astroforces::weather::CelesTrakCsvSpaceWeatherProvider::Create(
+        astroforces::weather::CelesTrakCsvSpaceWeatherProvider::Config{.csv_file = weather_csv});
   } else {
-    const dragcpp::atmo::WeatherIndices wx{.f107 = 150.0, .f107a = 150.0, .ap = 4.0, .kp = 2.0,
-                                            .status = dragcpp::atmo::Status::Ok};
-    weather = std::make_unique<dragcpp::weather::StaticSpaceWeatherProvider>(wx);
+    const astroforces::atmo::WeatherIndices wx{.f107 = 150.0, .f107a = 150.0, .ap = 4.0, .kp = 2.0,
+                                            .status = astroforces::atmo::Status::Ok};
+    weather = std::make_unique<astroforces::weather::StaticSpaceWeatherProvider>(wx);
   }
 
-  std::unique_ptr<dragcpp::atmo::IAtmosphereModel> atmosphere{};
+  std::unique_ptr<astroforces::atmo::IAtmosphereModel> atmosphere{};
   if (model_name == "nrlmsis") {
-    atmosphere = dragcpp::adapters::Nrlmsis21AtmosphereAdapter::Create(
-        dragcpp::adapters::Nrlmsis21AtmosphereAdapter::Config{.parm_file = model_data});
+    atmosphere = astroforces::adapters::Nrlmsis21AtmosphereAdapter::Create(
+        astroforces::adapters::Nrlmsis21AtmosphereAdapter::Config{.parm_file = model_data});
   } else if (model_name == "dtm2020") {
-    atmosphere = dragcpp::adapters::Dtm2020AtmosphereAdapter::Create(
-        dragcpp::adapters::Dtm2020AtmosphereAdapter::Config{.coeff_file = model_data});
+    atmosphere = astroforces::adapters::Dtm2020AtmosphereAdapter::Create(
+        astroforces::adapters::Dtm2020AtmosphereAdapter::Config{.coeff_file = model_data});
   } else {
-    atmosphere = std::make_unique<dragcpp::models::ExponentialAtmosphereModel>(1.225, 0.0, 7000.0, 1000.0);
+    atmosphere = std::make_unique<astroforces::models::ExponentialAtmosphereModel>(1.225, 0.0, 7000.0, 1000.0);
   }
 
-  std::unique_ptr<dragcpp::atmo::IWindModel> wind{};
+  std::unique_ptr<astroforces::atmo::IWindModel> wind{};
   if (wind_name == "hwm14") {
-    wind = dragcpp::adapters::Hwm14WindAdapter::Create(
-        dragcpp::adapters::Hwm14WindAdapter::Config{.data_dir = wind_data});
+    wind = astroforces::adapters::Hwm14WindAdapter::Create(
+        astroforces::adapters::Hwm14WindAdapter::Config{.data_dir = wind_data});
   } else {
-    wind = std::make_unique<dragcpp::models::ZeroWindModel>();
+    wind = std::make_unique<astroforces::models::ZeroWindModel>();
   }
 
-  dragcpp::sc::SpacecraftProperties sc{
+  astroforces::sc::SpacecraftProperties sc{
       .mass_kg = 1200.0, .reference_area_m2 = 12.0, .cd = 2.2, .use_surface_model = false, .surfaces = {}};
-  dragcpp::drag::DragAccelerationModel drag(*weather, *atmosphere, *wind);
+  astroforces::drag::DragAccelerationModel drag(*weather, *atmosphere, *wind);
 
   std::time_t now = std::time(nullptr);
   if (format == "csv") {
@@ -180,11 +180,11 @@ int main(int argc, char** argv) {
       continue;
     }
 
-    dragcpp::atmo::StateVector state{};
+    astroforces::atmo::StateVector state{};
     state.epoch.utc_seconds = row.epoch_utc_s;
     state.position_m = row.position_m;
     state.velocity_mps = row.velocity_mps;
-    state.frame = dragcpp::atmo::Frame::ECEF;
+    state.frame = astroforces::atmo::Frame::ECEF;
 
     const auto r = drag.evaluate(state, sc);
     if (format == "json") {

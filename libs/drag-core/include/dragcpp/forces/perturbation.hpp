@@ -12,26 +12,26 @@
 #include "dragcpp/atmo/types.hpp"
 #include "dragcpp/sc/spacecraft.hpp"
 
-namespace dragcpp::forces {
+namespace astroforces::forces {
 
 enum class PerturbationType : unsigned char { Unknown, Drag, Gravity, SRP, ThirdBody };
 
 struct PerturbationRequest {
-  dragcpp::atmo::StateVector state{};
-  const dragcpp::sc::SpacecraftProperties* spacecraft{nullptr};
+  astroforces::atmo::StateVector state{};
+  const astroforces::sc::SpacecraftProperties* spacecraft{nullptr};
 };
 
 struct PerturbationContribution {
   std::string name{};
   PerturbationType type{PerturbationType::Unknown};
-  dragcpp::atmo::Vec3 acceleration_mps2{};
-  dragcpp::atmo::Status status{dragcpp::atmo::Status::Ok};
+  astroforces::atmo::Vec3 acceleration_mps2{};
+  astroforces::atmo::Status status{astroforces::atmo::Status::Ok};
 };
 
 struct PerturbationResult {
-  dragcpp::atmo::Vec3 total_acceleration_mps2{};
+  astroforces::atmo::Vec3 total_acceleration_mps2{};
   std::vector<PerturbationContribution> contributions{};
-  dragcpp::atmo::Status status{dragcpp::atmo::Status::Ok};
+  astroforces::atmo::Status status{astroforces::atmo::Status::Ok};
 };
 
 class IPerturbationModel {
@@ -49,4 +49,4 @@ class PerturbationStack final {
   std::vector<std::unique_ptr<IPerturbationModel>> models_{};
 };
 
-}  // namespace dragcpp::forces
+}  // namespace astroforces::forces

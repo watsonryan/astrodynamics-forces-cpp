@@ -6,7 +6,7 @@
 
 #include "dragcpp/forces/perturbation.hpp"
 
-namespace dragcpp::forces {
+namespace astroforces::forces {
 
 void PerturbationStack::add(std::unique_ptr<IPerturbationModel> model) {
   if (!model) {
@@ -20,7 +20,7 @@ PerturbationResult PerturbationStack::evaluate(const PerturbationRequest& reques
   for (const auto& model : models_) {
     const auto c = model->evaluate(request);
     out.contributions.push_back(c);
-    if (c.status != dragcpp::atmo::Status::Ok && out.status == dragcpp::atmo::Status::Ok) {
+    if (c.status != astroforces::atmo::Status::Ok && out.status == astroforces::atmo::Status::Ok) {
       out.status = c.status;
     }
     out.total_acceleration_mps2 = out.total_acceleration_mps2 + c.acceleration_mps2;
@@ -28,4 +28,4 @@ PerturbationResult PerturbationStack::evaluate(const PerturbationRequest& reques
   return out;
 }
 
-}  // namespace dragcpp::forces
+}  // namespace astroforces::forces

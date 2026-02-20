@@ -27,11 +27,11 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  dragcpp::atmo::StateVector state{};
-  state.position_m = dragcpp::atmo::Vec3{std::atof(argv[1]), std::atof(argv[2]), std::atof(argv[3])};
-  state.velocity_mps = dragcpp::atmo::Vec3{std::atof(argv[4]), std::atof(argv[5]), std::atof(argv[6])};
+  astroforces::atmo::StateVector state{};
+  state.position_m = astroforces::atmo::Vec3{std::atof(argv[1]), std::atof(argv[2]), std::atof(argv[3])};
+  state.velocity_mps = astroforces::atmo::Vec3{std::atof(argv[4]), std::atof(argv[5]), std::atof(argv[6])};
   state.epoch.utc_seconds = std::atof(argv[7]);
-  state.frame = dragcpp::atmo::Frame::ECEF;
+  state.frame = astroforces::atmo::Frame::ECEF;
 
   const std::string weather_csv = (argc >= 13) ? argv[12] : "";
   const std::string model_name = (argc >= 9) ? argv[8] : "basic";
@@ -39,44 +39,44 @@ int main(int argc, char** argv) {
   const std::string wind_name = (argc >= 11) ? argv[10] : "zero";
 const std::string wind_data = (argc >= 12) ? argv[11] : "";
 
-  std::unique_ptr<dragcpp::atmo::ISpaceWeatherProvider> weather{};
+  std::unique_ptr<astroforces::atmo::ISpaceWeatherProvider> weather{};
   if (!weather_csv.empty()) {
-    weather = dragcpp::weather::CelesTrakCsvSpaceWeatherProvider::Create(
-        dragcpp::weather::CelesTrakCsvSpaceWeatherProvider::Config{.csv_file = weather_csv});
+    weather = astroforces::weather::CelesTrakCsvSpaceWeatherProvider::Create(
+        astroforces::weather::CelesTrakCsvSpaceWeatherProvider::Config{.csv_file = weather_csv});
   } else {
-    const dragcpp::atmo::WeatherIndices wx{.f107 = 150.0, .f107a = 150.0, .ap = 4.0, .kp = 2.0,
-                                            .status = dragcpp::atmo::Status::Ok};
-    weather = std::make_unique<dragcpp::weather::StaticSpaceWeatherProvider>(wx);
+    const astroforces::atmo::WeatherIndices wx{.f107 = 150.0, .f107a = 150.0, .ap = 4.0, .kp = 2.0,
+                                            .status = astroforces::atmo::Status::Ok};
+    weather = std::make_unique<astroforces::weather::StaticSpaceWeatherProvider>(wx);
   }
 
-  std::unique_ptr<dragcpp::atmo::IAtmosphereModel> atmosphere{};
+  std::unique_ptr<astroforces::atmo::IAtmosphereModel> atmosphere{};
   if (model_name == "nrlmsis") {
-    atmosphere = dragcpp::adapters::Nrlmsis21AtmosphereAdapter::Create(
-        dragcpp::adapters::Nrlmsis21AtmosphereAdapter::Config{.parm_file = model_data});
+    atmosphere = astroforces::adapters::Nrlmsis21AtmosphereAdapter::Create(
+        astroforces::adapters::Nrlmsis21AtmosphereAdapter::Config{.parm_file = model_data});
   } else if (model_name == "dtm2020") {
-    atmosphere = dragcpp::adapters::Dtm2020AtmosphereAdapter::Create(
-        dragcpp::adapters::Dtm2020AtmosphereAdapter::Config{.coeff_file = model_data});
+    atmosphere = astroforces::adapters::Dtm2020AtmosphereAdapter::Create(
+        astroforces::adapters::Dtm2020AtmosphereAdapter::Config{.coeff_file = model_data});
   } else {
-    atmosphere = std::make_unique<dragcpp::models::ExponentialAtmosphereModel>(1.225, 0.0, 7000.0, 1000.0);
+    atmosphere = std::make_unique<astroforces::models::ExponentialAtmosphereModel>(1.225, 0.0, 7000.0, 1000.0);
   }
-  std::unique_ptr<dragcpp::atmo::IWindModel> wind{};
+  std::unique_ptr<astroforces::atmo::IWindModel> wind{};
   if (wind_name == "hwm14") {
-    wind = dragcpp::adapters::Hwm14WindAdapter::Create(
-        dragcpp::adapters::Hwm14WindAdapter::Config{.data_dir = wind_data});
+    wind = astroforces::adapters::Hwm14WindAdapter::Create(
+        astroforces::adapters::Hwm14WindAdapter::Config{.data_dir = wind_data});
   } else {
-    wind = std::make_unique<dragcpp::models::ZeroWindModel>();
+    wind = std::make_unique<astroforces::models::ZeroWindModel>();
   }
 
-  dragcpp::sc::SpacecraftProperties sc{.mass_kg = 1200.0,
+  astroforces::sc::SpacecraftProperties sc{.mass_kg = 1200.0,
                                        .reference_area_m2 = 12.0,
                                        .cd = 2.2,
                                        .use_surface_model = false,
                                        .surfaces = {}};
 
-  dragcpp::drag::DragAccelerationModel model(*weather, *atmosphere, *wind);
+  astroforces::drag::DragAccelerationModel model(*weather, *atmosphere, *wind);
   const auto result = model.evaluate(state, sc);
 
-  if (result.status != dragcpp::atmo::Status::Ok) {
+  if (result.status != astroforces::atmo::Status::Ok) {
     std::cerr << "drag eval failed\n";
     return 2;
   }

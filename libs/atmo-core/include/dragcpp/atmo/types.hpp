@@ -9,7 +9,7 @@
 #include <cmath>
 #include <cstdint>
 
-namespace dragcpp::atmo {
+namespace astroforces::atmo {
 
 enum class Frame : std::uint8_t { ECI, ECEF, NED, BODY };
 
@@ -81,4 +81,4 @@ struct WindSample {
   Status status{Status::Ok};
 };
 
-}  // namespace dragcpp::atmo
+}  // namespace astroforces::atmo

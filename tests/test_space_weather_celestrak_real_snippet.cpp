@@ -20,10 +20,10 @@ bool approx(double a, double b, double tol) { return std::abs(a - b) <= tol; }
 int main() {
   namespace fs = std::filesystem;
   const auto csv = fs::path(DRAGCPP_SOURCE_DIR) / "tests" / "data" / "celestrak_real_snippet.csv";
-  const auto provider = dragcpp::weather::CelesTrakCsvSpaceWeatherProvider::Create({.csv_file = csv});
+  const auto provider = astroforces::weather::CelesTrakCsvSpaceWeatherProvider::Create({.csv_file = csv});
 
-  const dragcpp::atmo::WeatherIndices w = provider->at(dragcpp::atmo::Epoch{.utc_seconds = 946684800.0});  // 2000-01-01
-  if (w.status != dragcpp::atmo::Status::Ok) {
+  const astroforces::atmo::WeatherIndices w = provider->at(astroforces::atmo::Epoch{.utc_seconds = 946684800.0});  // 2000-01-01
+  if (w.status != astroforces::atmo::Status::Ok) {
     std::cerr << "status\n";
     return 1;
   }

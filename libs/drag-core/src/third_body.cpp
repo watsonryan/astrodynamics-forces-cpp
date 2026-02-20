@@ -11,36 +11,36 @@
 #include "dragcpp/atmo/conversions.hpp"
 #include "jpl_eph/jpl_eph.hpp"
 
-namespace dragcpp::forces {
+namespace astroforces::forces {
 namespace {
 
-dragcpp::atmo::Vec3 to_vec3(const std::array<double, 6>& pv) {
-  return dragcpp::atmo::Vec3{pv[0], pv[1], pv[2]};
+astroforces::atmo::Vec3 to_vec3(const std::array<double, 6>& pv) {
+  return astroforces::atmo::Vec3{pv[0], pv[1], pv[2]};
 }
 
-dragcpp::atmo::Status map_jpl_error(const jpl::eph::Status& s) {
+astroforces::atmo::Status map_jpl_error(const jpl::eph::Status& s) {
   switch (s.code) {
     case jpl::eph::ErrorCode::kInvalidArgument:
-      return dragcpp::atmo::Status::InvalidInput;
+      return astroforces::atmo::Status::InvalidInput;
     case jpl::eph::ErrorCode::kIo:
     case jpl::eph::ErrorCode::kCorruptFile:
     case jpl::eph::ErrorCode::kOutOfRange:
     case jpl::eph::ErrorCode::kUnsupported:
-      return dragcpp::atmo::Status::DataUnavailable;
+      return astroforces::atmo::Status::DataUnavailable;
     case jpl::eph::ErrorCode::kOk:
     default:
-      return dragcpp::atmo::Status::NumericalError;
+      return astroforces::atmo::Status::NumericalError;
   }
 }
 
-dragcpp::atmo::Vec3 third_body_direct_indirect(const dragcpp::atmo::Vec3& r_sc_m,
-                                               const dragcpp::atmo::Vec3& r_tb_m,
+astroforces::atmo::Vec3 third_body_direct_indirect(const astroforces::atmo::Vec3& r_sc_m,
+                                               const astroforces::atmo::Vec3& r_tb_m,
                                                double mu_m3_s2) {
-  const dragcpp::atmo::Vec3 rho = r_tb_m - r_sc_m;
-  const double rho_norm = dragcpp::atmo::norm(rho);
-  const double rtb_norm = dragcpp::atmo::norm(r_tb_m);
+  const astroforces::atmo::Vec3 rho = r_tb_m - r_sc_m;
+  const double rho_norm = astroforces::atmo::norm(rho);
+  const double rtb_norm = astroforces::atmo::norm(r_tb_m);
   if (rho_norm <= 0.0 || rtb_norm <= 0.0) {
-    return dragcpp::atmo::Vec3{};
+    return astroforces::atmo::Vec3{};
   }
   const double rho3 = rho_norm * rho_norm * rho_norm;
   const double rtb3 = rtb_norm * rtb_norm * rtb_norm;
@@ -68,16 +68,16 @@ PerturbationContribution ThirdBodyPerturbationModel::evaluate(const Perturbation
   out.type = PerturbationType::ThirdBody;
 
   if (!ephemeris_ || !workspace_) {
-    out.status = dragcpp::atmo::Status::DataUnavailable;
+    out.status = astroforces::atmo::Status::DataUnavailable;
     return out;
   }
-  if (request.state.frame != dragcpp::atmo::Frame::ECI) {
-    out.status = dragcpp::atmo::Status::InvalidInput;
+  if (request.state.frame != astroforces::atmo::Frame::ECI) {
+    out.status = astroforces::atmo::Status::InvalidInput;
     return out;
   }
 
   // Approximate UTC as TDB for initial force-model integration.
-  const double jed_tdb = dragcpp::atmo::utc_seconds_to_julian_date_utc(request.state.epoch.utc_seconds);
+  const double jed_tdb = astroforces::atmo::utc_seconds_to_julian_date_utc(request.state.epoch.utc_seconds);
 
   if (config_.use_sun) {
     const auto sun = ephemeris_->PlephSi(jed_tdb, jpl::eph::Body::Sun, jpl::eph::Body::Earth, false, *workspace_);
@@ -99,8 +99,8 @@ PerturbationContribution ThirdBodyPerturbationModel::evaluate(const Perturbation
         out.acceleration_mps2 + third_body_direct_indirect(request.state.position_m, to_vec3(moon.value().pv), config_.mu_moon_m3_s2);
   }
 
-  out.status = dragcpp::atmo::Status::Ok;
+  out.status = astroforces::atmo::Status::Ok;
   return out;
 }
 
-}  // namespace dragcpp::forces
+}  // namespace astroforces::forces

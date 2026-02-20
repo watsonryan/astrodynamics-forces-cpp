@@ -14,9 +14,9 @@ namespace msis21 {
 class Model;
 }
 
-namespace dragcpp::adapters {
+namespace astroforces::adapters {
 
-class Nrlmsis21AtmosphereAdapter final : public dragcpp::atmo::IAtmosphereModel {
+class Nrlmsis21AtmosphereAdapter final : public astroforces::atmo::IAtmosphereModel {
  public:
   struct Config {
     std::filesystem::path parm_file{};
@@ -24,8 +24,8 @@ class Nrlmsis21AtmosphereAdapter final : public dragcpp::atmo::IAtmosphereModel 
 
   static std::unique_ptr<Nrlmsis21AtmosphereAdapter> Create(const Config& config);
 
-  [[nodiscard]] dragcpp::atmo::AtmosphereSample evaluate(const dragcpp::atmo::StateVector& state,
-                                                          const dragcpp::atmo::WeatherIndices& weather) const override;
+  [[nodiscard]] astroforces::atmo::AtmosphereSample evaluate(const astroforces::atmo::StateVector& state,
+                                                          const astroforces::atmo::WeatherIndices& weather) const override;
 
  private:
   class Impl;
@@ -35,4 +35,4 @@ class Nrlmsis21AtmosphereAdapter final : public dragcpp::atmo::IAtmosphereModel 
   std::shared_ptr<Impl> impl_{};
 };
 
-}  // namespace dragcpp::adapters
+}  // namespace astroforces::adapters

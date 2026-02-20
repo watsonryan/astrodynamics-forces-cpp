@@ -10,43 +10,43 @@
 
 #include <Eigen/Dense>
 
-namespace dragcpp::drag {
+namespace astroforces::drag {
 
-DragResult DragAccelerationModel::evaluate(const dragcpp::atmo::StateVector& state,
-                                           const dragcpp::sc::SpacecraftProperties& sc) const {
+DragResult DragAccelerationModel::evaluate(const astroforces::atmo::StateVector& state,
+                                           const astroforces::sc::SpacecraftProperties& sc) const {
   if (sc.mass_kg <= 0.0) {
-    return DragResult{.status = dragcpp::atmo::Status::InvalidInput};
+    return DragResult{.status = astroforces::atmo::Status::InvalidInput};
   }
 
   const auto w = weather_.at(state.epoch);
-  if (w.status != dragcpp::atmo::Status::Ok) {
+  if (w.status != astroforces::atmo::Status::Ok) {
     return DragResult{.status = w.status};
   }
 
   const auto a = atmosphere_.evaluate(state, w);
-  if (a.status != dragcpp::atmo::Status::Ok || a.density_kg_m3 < 0.0) {
+  if (a.status != astroforces::atmo::Status::Ok || a.density_kg_m3 < 0.0) {
     return DragResult{.status = a.status};
   }
 
   const auto wind = wind_.evaluate(state, w);
-  if (wind.status != dragcpp::atmo::Status::Ok || wind.frame != state.frame) {
-    return DragResult{.status = dragcpp::atmo::Status::InvalidInput};
+  if (wind.status != astroforces::atmo::Status::Ok || wind.frame != state.frame) {
+    return DragResult{.status = astroforces::atmo::Status::InvalidInput};
   }
 
   const auto vrel = state.velocity_mps - wind.velocity_mps;
-  const double speed = dragcpp::atmo::norm(vrel);
+  const double speed = astroforces::atmo::norm(vrel);
   if (!std::isfinite(speed)) {
-    return DragResult{.status = dragcpp::atmo::Status::NumericalError};
+    return DragResult{.status = astroforces::atmo::Status::NumericalError};
   }
 
-  dragcpp::atmo::Vec3 flow_dir_body{};
+  astroforces::atmo::Vec3 flow_dir_body{};
   if (speed > 0.0) {
     const Eigen::Vector3d flow_frame(vrel.x / speed, vrel.y / speed, vrel.z / speed);
     const Eigen::Map<const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> body_from_frame(state.body_from_frame_dcm.data());
     const Eigen::Vector3d flow_body = body_from_frame * flow_frame;
-    flow_dir_body = dragcpp::atmo::Vec3{flow_body.x(), flow_body.y(), flow_body.z()};
+    flow_dir_body = astroforces::atmo::Vec3{flow_body.x(), flow_body.y(), flow_body.z()};
   }
-  const auto aero = dragcpp::sc::projected_area_and_cd(sc, flow_dir_body);
+  const auto aero = astroforces::sc::projected_area_and_cd(sc, flow_dir_body);
   const double area = aero.area_m2;
   const double cd = aero.cd_effective;
 
@@ -63,7 +63,7 @@ DragResult DragAccelerationModel::evaluate(const dragcpp::atmo::StateVector& sta
                     .area_m2 = area,
                     .cd = cd,
                     .weather = w,
-                    .status = dragcpp::atmo::Status::Ok};
+                    .status = astroforces::atmo::Status::Ok};
 }
 
-}  // namespace dragcpp::drag
+}  // namespace astroforces::drag

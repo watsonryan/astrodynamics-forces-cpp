@@ -7,7 +7,7 @@
 
 #include "dragcpp/atmo/types.hpp"
 
-namespace dragcpp::atmo {
+namespace astroforces::atmo {
 
 class ISpaceWeatherProvider {
  public:
@@ -29,4 +29,4 @@ class IWindModel {
                                             const WeatherIndices& weather) const = 0;
 };
 
-}  // namespace dragcpp::atmo
+}  // namespace astroforces::atmo

@@ -6,14 +6,14 @@
 
 #include "dragcpp/models/exponential_atmosphere.hpp"
 
-namespace dragcpp::models {
+namespace astroforces::models {
 
-dragcpp::atmo::WindSample ZeroWindModel::evaluate(const dragcpp::atmo::StateVector& state,
-                                                   const dragcpp::atmo::WeatherIndices& /*weather*/) const {
-  return dragcpp::atmo::WindSample{
-      .velocity_mps = dragcpp::atmo::Vec3{},
+astroforces::atmo::WindSample ZeroWindModel::evaluate(const astroforces::atmo::StateVector& state,
+                                                   const astroforces::atmo::WeatherIndices& /*weather*/) const {
+  return astroforces::atmo::WindSample{
+      .velocity_mps = astroforces::atmo::Vec3{},
       .frame = state.frame,
-      .status = dragcpp::atmo::Status::Ok};
+      .status = astroforces::atmo::Status::Ok};
 }
 
-}  // namespace dragcpp::models
+}  // namespace astroforces::models

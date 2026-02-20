@@ -11,7 +11,7 @@
 #include "dragcpp/atmo/conversions.hpp"
 #include "dtm2020/dtm2020_operational.hpp"
 
-namespace dragcpp::adapters {
+namespace astroforces::adapters {
 
 class Dtm2020AtmosphereAdapter::Impl {
  public:
@@ -30,24 +30,24 @@ std::unique_ptr<Dtm2020AtmosphereAdapter> Dtm2020AtmosphereAdapter::Create(const
   return ptr;
 }
 
-dragcpp::atmo::AtmosphereSample Dtm2020AtmosphereAdapter::evaluate(const dragcpp::atmo::StateVector& state,
-                                                                    const dragcpp::atmo::WeatherIndices& weather) const {
+astroforces::atmo::AtmosphereSample Dtm2020AtmosphereAdapter::evaluate(const astroforces::atmo::StateVector& state,
+                                                                    const astroforces::atmo::WeatherIndices& weather) const {
   if (!impl_) {
-    return dragcpp::atmo::AtmosphereSample{.status = dragcpp::atmo::Status::DataUnavailable};
+    return astroforces::atmo::AtmosphereSample{.status = astroforces::atmo::Status::DataUnavailable};
   }
-  if (weather.status != dragcpp::atmo::Status::Ok) {
-    return dragcpp::atmo::AtmosphereSample{.status = weather.status};
+  if (weather.status != astroforces::atmo::Status::Ok) {
+    return astroforces::atmo::AtmosphereSample{.status = weather.status};
   }
 
-  const auto geo = dragcpp::atmo::spherical_geodetic_from_ecef(state.position_m);
-  const auto iyd_sec = dragcpp::atmo::utc_seconds_to_iyd_sec(state.epoch.utc_seconds);
+  const auto geo = astroforces::atmo::spherical_geodetic_from_ecef(state.position_m);
+  const auto iyd_sec = astroforces::atmo::utc_seconds_to_iyd_sec(state.epoch.utc_seconds);
   const int doy = iyd_sec.first % 1000;
 
   dtm2020::OperationalInputs in{};
   in.altitude_km = geo.alt_m * 1e-3;
   in.latitude_deg = geo.lat_deg;
   in.longitude_deg = geo.lon_deg;
-  in.local_time_h = dragcpp::atmo::local_solar_time_hours(state.epoch.utc_seconds, geo.lon_deg);
+  in.local_time_h = astroforces::atmo::local_solar_time_hours(state.epoch.utc_seconds, geo.lon_deg);
   in.day_of_year = static_cast<double>(doy);
   in.f107 = weather.f107;
   in.f107m = weather.f107a;
@@ -56,13 +56,13 @@ dragcpp::atmo::AtmosphereSample Dtm2020AtmosphereAdapter::evaluate(const dragcpp
 
   const auto out = impl_->model_.Evaluate(in);
   if (!out.has_value()) {
-    return dragcpp::atmo::AtmosphereSample{.status = dragcpp::atmo::Status::NumericalError};
+    return astroforces::atmo::AtmosphereSample{.status = astroforces::atmo::Status::NumericalError};
   }
 
-  return dragcpp::atmo::AtmosphereSample{
+  return astroforces::atmo::AtmosphereSample{
       .density_kg_m3 = out.value().density_g_cm3 * 1000.0,
       .temperature_k = out.value().temperature_k,
-      .status = dragcpp::atmo::Status::Ok};
+      .status = astroforces::atmo::Status::Ok};
 }
 
-}  // namespace dragcpp::adapters
+}  // namespace astroforces::adapters

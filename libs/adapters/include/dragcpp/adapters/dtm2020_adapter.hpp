@@ -14,9 +14,9 @@ namespace dtm2020 {
 class Dtm2020Operational;
 }
 
-namespace dragcpp::adapters {
+namespace astroforces::adapters {
 
-class Dtm2020AtmosphereAdapter final : public dragcpp::atmo::IAtmosphereModel {
+class Dtm2020AtmosphereAdapter final : public astroforces::atmo::IAtmosphereModel {
  public:
   struct Config {
     std::filesystem::path coeff_file{};
@@ -24,8 +24,8 @@ class Dtm2020AtmosphereAdapter final : public dragcpp::atmo::IAtmosphereModel {
 
   static std::unique_ptr<Dtm2020AtmosphereAdapter> Create(const Config& config);
 
-  [[nodiscard]] dragcpp::atmo::AtmosphereSample evaluate(const dragcpp::atmo::StateVector& state,
-                                                          const dragcpp::atmo::WeatherIndices& weather) const override;
+  [[nodiscard]] astroforces::atmo::AtmosphereSample evaluate(const astroforces::atmo::StateVector& state,
+                                                          const astroforces::atmo::WeatherIndices& weather) const override;
 
  private:
   class Impl;
@@ -35,4 +35,4 @@ class Dtm2020AtmosphereAdapter final : public dragcpp::atmo::IAtmosphereModel {
   std::shared_ptr<Impl> impl_{};
 };
 
-}  // namespace dragcpp::adapters
+}  // namespace astroforces::adapters

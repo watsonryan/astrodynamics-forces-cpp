@@ -24,25 +24,25 @@ bool approx(double a, double b, double rel = 1e-12) {
   return d / n <= rel;
 }
 
-class ConstantPerturbation final : public dragcpp::forces::IPerturbationModel {
+class ConstantPerturbation final : public astroforces::forces::IPerturbationModel {
  public:
-  ConstantPerturbation(dragcpp::atmo::Vec3 a, const char* name) : a_(a), name_(name) {}
+  ConstantPerturbation(astroforces::atmo::Vec3 a, const char* name) : a_(a), name_(name) {}
 
-  [[nodiscard]] dragcpp::forces::PerturbationContribution evaluate(
-      const dragcpp::forces::PerturbationRequest& /*request*/) const override {
-    return dragcpp::forces::PerturbationContribution{
-        .name = name_, .type = dragcpp::forces::PerturbationType::Unknown, .acceleration_mps2 = a_, .status = dragcpp::atmo::Status::Ok};
+  [[nodiscard]] astroforces::forces::PerturbationContribution evaluate(
+      const astroforces::forces::PerturbationRequest& /*request*/) const override {
+    return astroforces::forces::PerturbationContribution{
+        .name = name_, .type = astroforces::forces::PerturbationType::Unknown, .acceleration_mps2 = a_, .status = astroforces::atmo::Status::Ok};
   }
 
  private:
-  dragcpp::atmo::Vec3 a_{};
+  astroforces::atmo::Vec3 a_{};
   std::string name_{};
 };
 
 }  // namespace
 
 int main() {
-  using namespace dragcpp;
+  using namespace astroforces;
 
   const atmo::WeatherIndices wx{.f107 = 150.0, .f107a = 150.0, .ap = 4.0, .kp = 2.0, .status = atmo::Status::Ok};
   weather::StaticSpaceWeatherProvider weather(wx);

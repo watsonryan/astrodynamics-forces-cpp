@@ -12,7 +12,7 @@
 #include "dragcpp/weather/static_provider.hpp"
 
 int main() {
-  using namespace dragcpp;
+  using namespace astroforces;
 
   const atmo::WeatherIndices wx{.f107 = 120.0, .f107a = 130.0, .ap = 8.0, .kp = 3.0, .status = atmo::Status::Ok};
   weather::StaticSpaceWeatherProvider weather(wx);

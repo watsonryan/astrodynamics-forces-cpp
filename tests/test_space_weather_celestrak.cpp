@@ -40,34 +40,34 @@ int main() {
     return 10;
   }
 
-  const auto provider = dragcpp::weather::CelesTrakCsvSpaceWeatherProvider::Create({.csv_file = csv});
+  const auto provider = astroforces::weather::CelesTrakCsvSpaceWeatherProvider::Create({.csv_file = csv});
 
-  const dragcpp::atmo::WeatherIndices w0 = provider->at(dragcpp::atmo::Epoch{.utc_seconds = 1767225600.0});  // 2026-01-01
-  if (w0.status != dragcpp::atmo::Status::Ok || !approx(w0.f107, 120.0, 1e-12) || !approx(w0.f107a, 130.0, 1e-12) ||
+  const astroforces::atmo::WeatherIndices w0 = provider->at(astroforces::atmo::Epoch{.utc_seconds = 1767225600.0});  // 2026-01-01
+  if (w0.status != astroforces::atmo::Status::Ok || !approx(w0.f107, 120.0, 1e-12) || !approx(w0.f107a, 130.0, 1e-12) ||
       !approx(w0.ap, 6.0, 1e-12) || !approx(w0.kp, 1.0, 1e-12) || !approx(w0.kp_3h_current, 1.0, 1e-12) ||
       !approx(w0.ap_3h_current, 6.0, 1e-12) || w0.has_ap_msis_history || !w0.f107_observed ||
-      w0.source != dragcpp::atmo::WeatherSource::CelesTrakLast5YearsCsv) {
+      w0.source != astroforces::atmo::WeatherSource::CelesTrakLast5YearsCsv) {
     std::cerr << "exact day lookup failed\n";
     return 1;
   }
 
-  const dragcpp::atmo::WeatherIndices wm =
-      provider->at(dragcpp::atmo::Epoch{.utc_seconds = 1767268800.0});  // 2026-01-01 12:00:00
-  if (wm.status != dragcpp::atmo::Status::Ok || !wm.interpolated || wm.extrapolated || !approx(wm.f107, 130.0, 1e-12) ||
+  const astroforces::atmo::WeatherIndices wm =
+      provider->at(astroforces::atmo::Epoch{.utc_seconds = 1767268800.0});  // 2026-01-01 12:00:00
+  if (wm.status != astroforces::atmo::Status::Ok || !wm.interpolated || wm.extrapolated || !approx(wm.f107, 130.0, 1e-12) ||
       !approx(wm.f107a, 140.0, 1e-12) || !approx(wm.ap, 6.5, 1e-12) || !approx(wm.kp, 1.5, 1e-12) ||
       !approx(wm.kp_3h_current, 1.0, 1e-12)) {
     std::cerr << "interpolation failed\n";
     return 2;
   }
 
-  const dragcpp::atmo::WeatherIndices wb = provider->at(dragcpp::atmo::Epoch{.utc_seconds = 1767139200.0});  // 2025-12-31
-  if (wb.status != dragcpp::atmo::Status::Ok || !wb.extrapolated || !approx(wb.f107, 120.0, 1e-12)) {
+  const astroforces::atmo::WeatherIndices wb = provider->at(astroforces::atmo::Epoch{.utc_seconds = 1767139200.0});  // 2025-12-31
+  if (wb.status != astroforces::atmo::Status::Ok || !wb.extrapolated || !approx(wb.f107, 120.0, 1e-12)) {
     std::cerr << "low-side clamp failed\n";
     return 3;
   }
 
-  const dragcpp::atmo::WeatherIndices wa = provider->at(dragcpp::atmo::Epoch{.utc_seconds = 1767603600.0});  // 2026-01-05 09:00:00
-  if (wa.status != dragcpp::atmo::Status::Ok || wa.extrapolated || !wa.has_ap_msis_history ||
+  const astroforces::atmo::WeatherIndices wa = provider->at(astroforces::atmo::Epoch{.utc_seconds = 1767603600.0});  // 2026-01-05 09:00:00
+  if (wa.status != astroforces::atmo::Status::Ok || wa.extrapolated || !wa.has_ap_msis_history ||
       !approx(wa.ap_msis_history[0], 10.0, 1e-12) || !approx(wa.kp_3h_current, 5.0, 1e-12) || wa.f107_observed) {
     std::cerr << "high-side clamp failed\n";
     return 4;

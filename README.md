@@ -72,10 +72,10 @@ Drag area modes:
 - Body-frame flow direction uses `StateVector::body_from_frame_dcm` (row-major DCM).
 
 General perturbation interface:
-- Use `dragcpp::forces::IPerturbationModel` for each force source.
-- Combine models with `dragcpp::forces::PerturbationStack`.
-- Drag is exposed as `dragcpp::drag::DragPerturbationModel` and plugs directly into the same stack used for future gravity/SRP/third-body models.
-- Third-body is exposed as `dragcpp::forces::ThirdBodyPerturbationModel` (Sun/Moon direct + indirect terms via JPL ephemerides).
+- Use `astroforces::forces::IPerturbationModel` for each force source.
+- Combine models with `astroforces::forces::PerturbationStack`.
+- Drag is exposed as `astroforces::drag::DragPerturbationModel` and plugs directly into the same stack used for future gravity/SRP/third-body models.
+- Third-body is exposed as `astroforces::forces::ThirdBodyPerturbationModel` (Sun/Moon direct + indirect terms via JPL ephemerides).
 
 Performance benchmark:
 ```bash

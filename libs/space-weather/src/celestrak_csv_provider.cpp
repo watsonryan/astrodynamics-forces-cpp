@@ -14,7 +14,7 @@
 #include <string>
 #include <utility>
 
-namespace dragcpp::weather {
+namespace astroforces::weather {
 namespace {
 
 constexpr std::size_t kMinCelesTrakColumns = 31;
@@ -139,10 +139,10 @@ double avg_ap_range_hours_back(const std::vector<CelesTrakCsvSpaceWeatherProvide
   return (n > 0) ? (sum / static_cast<double>(n)) : 0.0;
 }
 
-dragcpp::atmo::WeatherIndices make_indices(const CelesTrakCsvSpaceWeatherProvider::DailySample& s, bool interpolated,
+astroforces::atmo::WeatherIndices make_indices(const CelesTrakCsvSpaceWeatherProvider::DailySample& s, bool interpolated,
                                            bool extrapolated, int slot, bool has_msis_history,
                                            const std::array<double, 7>& ap_msis_history) {
-  dragcpp::atmo::WeatherIndices out{
+  astroforces::atmo::WeatherIndices out{
       .f107 = s.f107_obs,
       .f107a = s.f107_obs_center81,
       .ap = s.ap_avg,
@@ -155,10 +155,10 @@ dragcpp::atmo::WeatherIndices make_indices(const CelesTrakCsvSpaceWeatherProvide
       .has_ap_msis_history = has_msis_history,
       .f107_observed = s.f107_observed,
       .geomagnetic_observed = s.geomagnetic_observed,
-      .source = dragcpp::atmo::WeatherSource::CelesTrakLast5YearsCsv,
+      .source = astroforces::atmo::WeatherSource::CelesTrakLast5YearsCsv,
       .interpolated = interpolated,
       .extrapolated = extrapolated,
-      .status = dragcpp::atmo::Status::Ok};
+      .status = astroforces::atmo::Status::Ok};
   return out;
 }
 
@@ -241,11 +241,11 @@ std::unique_ptr<CelesTrakCsvSpaceWeatherProvider> CelesTrakCsvSpaceWeatherProvid
   return std::unique_ptr<CelesTrakCsvSpaceWeatherProvider>(new CelesTrakCsvSpaceWeatherProvider(std::move(samples)));
 }
 
-dragcpp::atmo::WeatherIndices CelesTrakCsvSpaceWeatherProvider::at(const dragcpp::atmo::Epoch& epoch) const {
+astroforces::atmo::WeatherIndices CelesTrakCsvSpaceWeatherProvider::at(const astroforces::atmo::Epoch& epoch) const {
   if (samples_.empty()) {
-    return dragcpp::atmo::WeatherIndices{
-        .source = dragcpp::atmo::WeatherSource::CelesTrakLast5YearsCsv,
-        .status = dragcpp::atmo::Status::DataUnavailable};
+    return astroforces::atmo::WeatherIndices{
+        .source = astroforces::atmo::WeatherSource::CelesTrakLast5YearsCsv,
+        .status = astroforces::atmo::Status::DataUnavailable};
   }
 
   const double t = epoch.utc_seconds;
@@ -299,4 +299,4 @@ dragcpp::atmo::WeatherIndices CelesTrakCsvSpaceWeatherProvider::at(const dragcpp
   return make_indices(interp, alpha > 0.0 && alpha < 1.0, extrapolated, slot, has_msis_history, ap_msis_history);
 }
 
-}  // namespace dragcpp::weather
+}  // namespace astroforces::weather

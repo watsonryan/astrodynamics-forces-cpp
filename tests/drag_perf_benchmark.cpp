@@ -27,7 +27,7 @@ int read_env_int(const char* name, int fallback) {
 }  // namespace
 
 int main() {
-  using namespace dragcpp;
+  using namespace astroforces;
   using clock = std::chrono::steady_clock;
 
   const int samples = read_env_int("ASTRO_FORCES_PERF_SAMPLES", 40);

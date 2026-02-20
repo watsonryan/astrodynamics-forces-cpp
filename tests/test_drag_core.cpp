@@ -23,7 +23,7 @@ bool approx(double a, double b, double rel) {
 }  // namespace
 
 int main() {
-  using namespace dragcpp;
+  using namespace astroforces;
   const atmo::WeatherIndices wx{.f107 = 150.0, .f107a = 150.0, .ap = 4.0, .kp = 2.0, .status = atmo::Status::Ok};
   weather::StaticSpaceWeatherProvider weather(wx);
   models::ExponentialAtmosphereModel atmosphere(1.225, 0.0, 7000.0, 1000.0);

@@ -9,10 +9,10 @@
 
 #include "dragcpp/atmo/types.hpp"
 
-namespace dragcpp::sc {
+namespace astroforces::sc {
 
 struct Surface {
-  dragcpp::atmo::Vec3 normal_body{};
+  astroforces::atmo::Vec3 normal_body{};
   double area_m2{};
   double cd{};
   double specularity{};
@@ -33,8 +33,8 @@ struct AeroProjection {
 };
 
 [[nodiscard]] double projected_area_m2(const SpacecraftProperties& sc,
-                                       const dragcpp::atmo::Vec3& flow_dir_body);
+                                       const astroforces::atmo::Vec3& flow_dir_body);
 [[nodiscard]] AeroProjection projected_area_and_cd(const SpacecraftProperties& sc,
-                                                   const dragcpp::atmo::Vec3& flow_dir_body);
+                                                   const astroforces::atmo::Vec3& flow_dir_body);
 
-}  // namespace dragcpp::sc
+}  // namespace astroforces::sc

@@ -20,7 +20,7 @@
 
 namespace {
 
-bool finite(const dragcpp::atmo::Vec3& v) {
+bool finite(const astroforces::atmo::Vec3& v) {
   return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
 }
 
@@ -33,7 +33,7 @@ bool approx_rel(double a, double b, double rel = 1e-12) {
 }  // namespace
 
 int main() {
-  using namespace dragcpp;
+  using namespace astroforces;
   namespace fs = std::filesystem;
 
   const auto nrl_parm = fs::path(DRAGCPP_NRLMSIS21_SOURCE_DIR) / "data" / "msis21.parm";
