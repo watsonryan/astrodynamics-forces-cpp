@@ -20,7 +20,8 @@ add_library(dragcpp_atmo_core INTERFACE)
 target_include_directories(dragcpp_atmo_core INTERFACE ${CMAKE_SOURCE_DIR}/libs/atmo-core/include)
 
 add_library(dragcpp_space_weather STATIC
-  libs/space-weather/src/static_provider.cpp)
+  libs/space-weather/src/static_provider.cpp
+  libs/space-weather/src/celestrak_csv_provider.cpp)
 target_include_directories(dragcpp_space_weather PUBLIC ${CMAKE_SOURCE_DIR}/libs/space-weather/include)
 target_link_libraries(dragcpp_space_weather PUBLIC dragcpp_atmo_core)
 
@@ -135,4 +136,10 @@ if(DRAGCPP_BUILD_TESTS)
     DRAGCPP_DTM2020_SOURCE_DIR="${dtm2020_ext_SOURCE_DIR}"
     DRAGCPP_HWM14_SOURCE_DIR="${hwm14_ext_SOURCE_DIR}")
   add_test(NAME DragAdaptersIntegration COMMAND dragcpp_test_adapters)
+
+  add_executable(dragcpp_test_space_weather tests/test_space_weather_celestrak.cpp)
+  target_link_libraries(dragcpp_test_space_weather PRIVATE
+    dragcpp_atmo_core
+    dragcpp_space_weather)
+  add_test(NAME SpaceWeatherCelesTrak COMMAND dragcpp_test_space_weather)
 endif()

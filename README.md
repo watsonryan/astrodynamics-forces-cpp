@@ -26,6 +26,12 @@ External model repos are pulled via CPM with HTTPS URLs by default; override cac
 ./build/macos-debug/drag_cli 6778137 0 0 0 7670 0 1000000000
 ```
 
+Optional weather input:
+- Pass CelesTrak 5-year CSV as final arg:
+```bash
+./build/macos-debug/drag_cli 6778137 0 0 0 7670 0 1000000000 nrlmsis /path/to/msis21.parm zero "" /path/to/SW-Last5Years.csv
+```
+
 ## Next Integration Steps
 1. Replace `models-basic` with adapter-backed model bundle wiring.
 2. Implement real space weather readers/interpolation in `libs/space-weather`.

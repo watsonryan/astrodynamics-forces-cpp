@@ -11,7 +11,9 @@ namespace dragcpp::weather {
 
 class StaticSpaceWeatherProvider final : public dragcpp::atmo::ISpaceWeatherProvider {
  public:
-  explicit StaticSpaceWeatherProvider(dragcpp::atmo::WeatherIndices indices) : indices_(indices) {}
+  explicit StaticSpaceWeatherProvider(dragcpp::atmo::WeatherIndices indices) : indices_(indices) {
+    indices_.source = dragcpp::atmo::WeatherSource::StaticProvider;
+  }
   [[nodiscard]] dragcpp::atmo::WeatherIndices at(const dragcpp::atmo::Epoch& /*epoch*/) const override {
     return indices_;
   }

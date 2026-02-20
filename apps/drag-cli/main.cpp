@@ -15,13 +15,15 @@
 #include "dragcpp/drag/drag_model.hpp"
 #include "dragcpp/models/exponential_atmosphere.hpp"
 #include "dragcpp/sc/spacecraft.hpp"
+#include "dragcpp/weather/celestrak_csv_provider.hpp"
 #include "dragcpp/weather/static_provider.hpp"
 
 int main(int argc, char** argv) {
-  if (argc < 8 || argc > 12) {
-    std::cerr << "usage: drag_cli <x_m> <y_m> <z_m> <vx_mps> <vy_mps> <vz_mps> <epoch_utc_s> [model] [model_data] [wind] [wind_data]\n";
+  if (argc < 8 || argc > 13) {
+    std::cerr << "usage: drag_cli <x_m> <y_m> <z_m> <vx_mps> <vy_mps> <vz_mps> <epoch_utc_s> [model] [model_data] [wind] [wind_data] [weather_csv]\n";
     std::cerr << "models: basic | nrlmsis | dtm2020\n";
     std::cerr << "wind: zero | hwm14\n";
+    std::cerr << "weather_csv: CelesTrak SW-Last5Years.csv (optional)\n";
     return 1;
   }
 
@@ -31,13 +33,21 @@ int main(int argc, char** argv) {
   state.epoch.utc_seconds = std::atof(argv[7]);
   state.frame = dragcpp::atmo::Frame::ECEF;
 
-  const dragcpp::atmo::WeatherIndices wx{.f107 = 150.0, .f107a = 150.0, .ap = 4.0, .kp = 2.0,
-                                          .status = dragcpp::atmo::Status::Ok};
-  dragcpp::weather::StaticSpaceWeatherProvider weather(wx);
+  const std::string weather_csv = (argc >= 13) ? argv[12] : "";
   const std::string model_name = (argc >= 9) ? argv[8] : "basic";
   const std::string model_data = (argc >= 10) ? argv[9] : "";
   const std::string wind_name = (argc >= 11) ? argv[10] : "zero";
   const std::string wind_data = (argc >= 12) ? argv[11] : "";
+
+  std::unique_ptr<dragcpp::atmo::ISpaceWeatherProvider> weather{};
+  if (!weather_csv.empty()) {
+    weather = dragcpp::weather::CelesTrakCsvSpaceWeatherProvider::Create(
+        dragcpp::weather::CelesTrakCsvSpaceWeatherProvider::Config{.csv_file = weather_csv});
+  } else {
+    const dragcpp::atmo::WeatherIndices wx{.f107 = 150.0, .f107a = 150.0, .ap = 4.0, .kp = 2.0,
+                                            .status = dragcpp::atmo::Status::Ok};
+    weather = std::make_unique<dragcpp::weather::StaticSpaceWeatherProvider>(wx);
+  }
 
   std::unique_ptr<dragcpp::atmo::IAtmosphereModel> atmosphere{};
   if (model_name == "nrlmsis") {
@@ -63,7 +73,7 @@ int main(int argc, char** argv) {
                                        .use_surface_model = false,
                                        .surfaces = {}};
 
-  dragcpp::drag::DragAccelerationModel model(weather, *atmosphere, *wind);
+  dragcpp::drag::DragAccelerationModel model(*weather, *atmosphere, *wind);
   const auto result = model.evaluate(state, sc);
 
   if (result.status != dragcpp::atmo::Status::Ok) {

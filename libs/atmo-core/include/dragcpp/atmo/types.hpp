@@ -14,6 +14,8 @@ enum class Frame : std::uint8_t { ECI, ECEF, NED, BODY };
 
 enum class Status : std::uint8_t { Ok, InvalidInput, NotImplemented, DataUnavailable, NumericalError };
 
+enum class WeatherSource : std::uint8_t { Unknown, StaticProvider, CelesTrakLast5YearsCsv };
+
 struct Vec3 {
   double x{};
   double y{};
@@ -51,6 +53,9 @@ struct WeatherIndices {
   double f107a{};
   double ap{};
   double kp{};
+  WeatherSource source{WeatherSource::Unknown};
+  bool interpolated{};
+  bool extrapolated{};
   Status status{Status::Ok};
 };
 
