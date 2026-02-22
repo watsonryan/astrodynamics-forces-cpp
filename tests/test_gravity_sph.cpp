@@ -52,6 +52,18 @@ std::filesystem::path write_test_eop() {
   return p;
 }
 
+std::filesystem::path write_test_cip() {
+  namespace fs = std::filesystem;
+  const fs::path p = fs::temp_directory_path() / "astroforces_test_cip_for_gravity.txt";
+  std::ofstream out(p);
+  out << "# MJD_UTC X Y s (arcsec)\n";
+  out << "60676.0  0.100  -0.200  0.010\n";
+  out << "60677.0  0.120  -0.220  0.015\n";
+  out << "60678.0  0.140  -0.240  0.020\n";
+  out.close();
+  return p;
+}
+
 std::filesystem::path write_test_constituent_tide() {
   namespace fs = std::filesystem;
   const fs::path p = fs::temp_directory_path() / "astroforces_test_tide.txt";
@@ -153,6 +165,8 @@ int main() {
   state.frame = astroforces::core::Frame::ECEF;
 
   if (fs::exists(eph_path)) {
+    const auto eop_file = write_test_eop();
+    const auto cip_file = write_test_cip();
     const auto no_tides = astroforces::forces::GravitySphAccelerationModel::Create(
         {.gravity_model_file = gravity_file,
          .ephemeris_file = eph_path,
@@ -163,6 +177,8 @@ int main() {
     const auto with_tides = astroforces::forces::GravitySphAccelerationModel::Create(
         {.gravity_model_file = gravity_file,
          .ephemeris_file = eph_path,
+         .eop_finals_file = eop_file,
+         .cip_xys_file = cip_file,
          .max_degree = 4,
          .use_central = true,
          .use_sph = true,
@@ -170,16 +186,16 @@ int main() {
     const auto out_no_tides = no_tides->evaluate(state);
     const auto out_with_tides = with_tides->evaluate(state);
     if (out_no_tides.status != astroforces::core::Status::Ok || out_with_tides.status != astroforces::core::Status::Ok) {
-      spdlog::warn("gravity sph tide checks skipped: tide model evaluation unavailable");
-    } else {
-      const auto tide_delta = astroforces::core::Vec3{
-          out_with_tides.acceleration_mps2.x - out_no_tides.acceleration_mps2.x,
-          out_with_tides.acceleration_mps2.y - out_no_tides.acceleration_mps2.y,
-          out_with_tides.acceleration_mps2.z - out_no_tides.acceleration_mps2.z};
-      if (!(astroforces::core::norm(tide_delta) > 0.0)) {
-        spdlog::error("solid Earth tides had no effect");
-        return 6;
-      }
+      spdlog::error("solid Earth tide model evaluation failed");
+      return 5;
+    }
+    const auto tide_delta = astroforces::core::Vec3{
+        out_with_tides.acceleration_mps2.x - out_no_tides.acceleration_mps2.x,
+        out_with_tides.acceleration_mps2.y - out_no_tides.acceleration_mps2.y,
+        out_with_tides.acceleration_mps2.z - out_no_tides.acceleration_mps2.z};
+    if (!(astroforces::core::norm(tide_delta) > 0.0)) {
+      spdlog::error("solid Earth tides had no effect");
+      return 6;
     }
   }
 
