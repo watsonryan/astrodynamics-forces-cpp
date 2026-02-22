@@ -476,9 +476,7 @@ double gmst_rad_from_jd_utc(double jd_utc) {
   return (gmst_wrapped < 0.0 ? gmst_wrapped + 360.0 : gmst_wrapped) * kPi / 180.0;
 }
 
-astroforces::core::Vec3 rot_z(double theta, const astroforces::core::Vec3& v) {
-  const double c = std::cos(theta);
-  const double s = std::sin(theta);
+astroforces::core::Vec3 rot_z_cs(double c, double s, const astroforces::core::Vec3& v) {
   return astroforces::core::Vec3{c * v.x + s * v.y, -s * v.x + c * v.y, v.z};
 }
 
@@ -552,14 +550,19 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
   }
 
   const double jd_utc = astroforces::core::utc_seconds_to_julian_date_utc(state.epoch.utc_seconds);
-  const double gmst = gmst_rad_from_jd_utc(jd_utc);
+  const bool needs_gmst = (state.frame == astroforces::core::Frame::ECI)
+                          || (config_.use_solid_earth_tides && (config_.use_sun_tide || config_.use_moon_tide || config_.use_solid_earth_tide2))
+                          || config_.use_ocean_tide || config_.use_atmos_tide;
+  const double gmst = needs_gmst ? gmst_rad_from_jd_utc(jd_utc) : 0.0;
+  const double gmst_c = needs_gmst ? std::cos(gmst) : 1.0;
+  const double gmst_s = needs_gmst ? std::sin(gmst) : 0.0;
 
   astroforces::core::Vec3 r_ecef = state.position_m;
   if (state.frame == astroforces::core::Frame::ECI) {
     if (!config_.use_simple_eci_to_ecef) {
       return GravitySphResult{.status = astroforces::core::Status::InvalidInput};
     }
-    r_ecef = rot_z(gmst, state.position_m);
+    r_ecef = rot_z_cs(gmst_c, gmst_s, state.position_m);
   }
 
   GravitySphResult out{};
@@ -623,7 +626,7 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
           if (!sun.has_value()) {
             return GravitySphResult{.status = map_jpl_error(sun.error())};
           }
-          const auto r_sun_ecef = rot_z(gmst, to_vec3(sun.value().pv));
+          const auto r_sun_ecef = rot_z_cs(gmst_c, gmst_s, to_vec3(sun.value().pv));
           tides::add_solid_earth_tide1_delta(r_sun_ecef, config_.mu_sun_m3_s2, mu_earth, radius_m, nmax, dC, dS);
           out.solid_tide_sun_mps2 = accel_sph_noncentral(r_ecef, dC, dS, nmax, mu_earth, radius_m);
         }
@@ -635,7 +638,7 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
           }
           tmpC.setZero();
           tmpS.setZero();
-          const auto r_moon_ecef = rot_z(gmst, to_vec3(moon.value().pv));
+          const auto r_moon_ecef = rot_z_cs(gmst_c, gmst_s, to_vec3(moon.value().pv));
           tides::add_solid_earth_tide1_delta(r_moon_ecef, config_.mu_moon_m3_s2, mu_earth, radius_m, nmax, tmpC, tmpS);
           out.solid_tide_moon_mps2 = accel_sph_noncentral(r_ecef, tmpC, tmpS, nmax, mu_earth, radius_m);
           dC += tmpC;
@@ -742,17 +745,37 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
   out.acceleration_mps2 = out.central_mps2 + out.sph_mps2;
 
   if (state.frame == astroforces::core::Frame::ECI) {
-    out.acceleration_mps2 = rot_z(-gmst, out.acceleration_mps2);
-    out.central_mps2 = rot_z(-gmst, out.central_mps2);
-    out.sph_mps2 = rot_z(-gmst, out.sph_mps2);
-    out.solid_tide_sun_mps2 = rot_z(-gmst, out.solid_tide_sun_mps2);
-    out.solid_tide_moon_mps2 = rot_z(-gmst, out.solid_tide_moon_mps2);
-    out.solid_tide_freqdep_mps2 = rot_z(-gmst, out.solid_tide_freqdep_mps2);
-    out.pole_tide_solid_mps2 = rot_z(-gmst, out.pole_tide_solid_mps2);
-    out.pole_tide_ocean_mps2 = rot_z(-gmst, out.pole_tide_ocean_mps2);
-    out.aod_mps2 = rot_z(-gmst, out.aod_mps2);
-    out.ocean_tide_mps2 = rot_z(-gmst, out.ocean_tide_mps2);
-    out.atmos_tide_mps2 = rot_z(-gmst, out.atmos_tide_mps2);
+    out.acceleration_mps2 = rot_z_cs(gmst_c, -gmst_s, out.acceleration_mps2);
+    if (config_.use_central) {
+      out.central_mps2 = rot_z_cs(gmst_c, -gmst_s, out.central_mps2);
+    }
+    if (config_.use_sph) {
+      out.sph_mps2 = rot_z_cs(gmst_c, -gmst_s, out.sph_mps2);
+    }
+    if (config_.use_solid_earth_tides && config_.use_sun_tide) {
+      out.solid_tide_sun_mps2 = rot_z_cs(gmst_c, -gmst_s, out.solid_tide_sun_mps2);
+    }
+    if (config_.use_solid_earth_tides && config_.use_moon_tide) {
+      out.solid_tide_moon_mps2 = rot_z_cs(gmst_c, -gmst_s, out.solid_tide_moon_mps2);
+    }
+    if (config_.use_solid_earth_tides && config_.use_solid_earth_tide2) {
+      out.solid_tide_freqdep_mps2 = rot_z_cs(gmst_c, -gmst_s, out.solid_tide_freqdep_mps2);
+    }
+    if (config_.use_pole_tide_solid) {
+      out.pole_tide_solid_mps2 = rot_z_cs(gmst_c, -gmst_s, out.pole_tide_solid_mps2);
+    }
+    if (config_.use_pole_tide_ocean) {
+      out.pole_tide_ocean_mps2 = rot_z_cs(gmst_c, -gmst_s, out.pole_tide_ocean_mps2);
+    }
+    if (config_.use_aod) {
+      out.aod_mps2 = rot_z_cs(gmst_c, -gmst_s, out.aod_mps2);
+    }
+    if (config_.use_ocean_tide) {
+      out.ocean_tide_mps2 = rot_z_cs(gmst_c, -gmst_s, out.ocean_tide_mps2);
+    }
+    if (config_.use_atmos_tide) {
+      out.atmos_tide_mps2 = rot_z_cs(gmst_c, -gmst_s, out.atmos_tide_mps2);
+    }
   }
 
   if (!finite_vec(out.acceleration_mps2)) {
