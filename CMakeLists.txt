@@ -69,6 +69,7 @@ target_link_libraries(astroforces_models_basic PUBLIC astroforces_atmo_core)
 add_library(astroforces_forces_core STATIC
   libs/forces-core/src/core/perturbation.cpp
   libs/forces-core/src/gravity/gravity_sph_model.cpp
+  libs/forces-core/src/gravity/tides/solid_earth_tide.cpp
   libs/forces-core/src/gravity/gravity_sph_perturbation.cpp
   libs/forces-core/src/gravity/relativity_model.cpp
   libs/forces-core/src/gravity/relativity_perturbation.cpp
@@ -347,4 +348,16 @@ if(ASTROFORCES_BUILD_TESTS)
   target_compile_definitions(astroforces_test_gravity_sph PRIVATE
     ASTROFORCES_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
   add_test(NAME GravitySph COMMAND astroforces_test_gravity_sph)
+
+  add_executable(astroforces_test_core_transforms tests/test_core_transforms.cpp)
+  target_link_libraries(astroforces_test_core_transforms PRIVATE
+    astroforces_atmo_core)
+  add_test(NAME CoreTransforms COMMAND astroforces_test_core_transforms)
+
+  add_executable(astroforces_test_eop_reader tests/test_eop_reader.cpp)
+  target_link_libraries(astroforces_test_eop_reader PRIVATE
+    astroforces_atmo_core)
+  target_compile_definitions(astroforces_test_eop_reader PRIVATE
+    ASTROFORCES_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+  add_test(NAME EopReader COMMAND astroforces_test_eop_reader)
 endif()

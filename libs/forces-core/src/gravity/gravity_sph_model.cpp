@@ -19,7 +19,8 @@
 
 #include <Eigen/Dense>
 
-#include "astroforces/atmo/conversions.hpp"
+#include "astroforces/core/transforms.hpp"
+#include "astroforces/forces/gravity/tides/solid_earth_tide.hpp"
 #include "jpl_eph/jpl_eph.hpp"
 
 namespace astroforces::forces {
@@ -463,61 +464,6 @@ astroforces::core::Vec3 accel_sph_noncentral(const astroforces::core::Vec3& r_ec
   return acc;
 }
 
-void add_solid_earth_tide1_delta(const astroforces::core::Vec3& body_ecef_m,
-                                 double mu_body_m3_s2,
-                                 double mu_earth_m3_s2,
-                                 double radius_m,
-                                 int max_deg,
-                                 Eigen::MatrixXd& dC,
-                                 Eigen::MatrixXd& dS) {
-  if (max_deg < 2) {
-    return;
-  }
-
-  Eigen::Matrix<double, 5, 5> elasticLove;
-  elasticLove << 0, 0, 0, 0, 0,
-                 0, 0, 0, 0, 0,
-                 0.29525, 0.29470, 0.29801, 0, 0,
-                 0.09300, 0.09300, 0.09300, 0.09400, 0,
-                 -0.00087, -0.00079, -0.00057, 0, 0;
-
-  const double rb = astroforces::core::norm(body_ecef_m);
-  if (!(rb > 0.0)) {
-    return;
-  }
-
-  const double sin_lat = body_ecef_m.z / rb;
-  const double lon = std::atan2(body_ecef_m.y, body_ecef_m.x);
-
-  LegendreCache leg(3);
-  if (!leg.calculate(sin_lat)) {
-    return;
-  }
-
-  const int lim_23 = std::min(max_deg, 3);
-  for (int n = 2; n <= lim_23; ++n) {
-    for (int m = 0; m <= n; ++m) {
-      const double cst = elasticLove(n, m) / (2.0 * n + 1.0);
-      const double amp = cst * mu_body_m3_s2 / mu_earth_m3_s2 * std::pow(radius_m / rb, n + 1) * leg.Pnm(n, m);
-      dC(n, m) += amp * std::cos(m * lon);
-      if (m > 0) {
-        dS(n, m) += amp * std::sin(m * lon);
-      }
-    }
-  }
-
-  if (max_deg >= 4) {
-    for (int m = 0; m <= 2; ++m) {
-      const double cst = elasticLove(4, m) / 5.0;
-      const double amp = cst * mu_body_m3_s2 / mu_earth_m3_s2 * std::pow(radius_m / rb, 3) * leg.Pnm(2, m);
-      dC(4, m) += amp * std::cos(m * lon);
-      if (m > 0) {
-        dS(4, m) += amp * std::sin(m * lon);
-      }
-    }
-  }
-}
-
 double gmst_rad_from_jd_utc(double jd_utc) {
   const double T = (jd_utc - 2451545.0) / 36525.0;
   const double gmst_deg = 280.46061837 + 360.98564736629 * (jd_utc - 2451545.0) + 0.000387933 * T * T - (T * T * T) / 38710000.0;
@@ -619,7 +565,7 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
             return GravitySphResult{.status = map_jpl_error(sun.error())};
           }
           const auto r_sun_ecef = rot_z(gmst, to_vec3(sun.value().pv));
-          add_solid_earth_tide1_delta(r_sun_ecef, config_.mu_sun_m3_s2, mu_earth, radius_m, nmax, dC, dS);
+          tides::add_solid_earth_tide1_delta(r_sun_ecef, config_.mu_sun_m3_s2, mu_earth, radius_m, nmax, dC, dS);
           out.solid_tide_sun_mps2 = accel_sph_noncentral(r_ecef, dC, dS, nmax, mu_earth, radius_m);
         }
 
@@ -631,7 +577,7 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
           Eigen::MatrixXd dCmoon = Eigen::MatrixXd::Zero(Ceff.rows(), Ceff.cols());
           Eigen::MatrixXd dSmoon = Eigen::MatrixXd::Zero(Seff.rows(), Seff.cols());
           const auto r_moon_ecef = rot_z(gmst, to_vec3(moon.value().pv));
-          add_solid_earth_tide1_delta(r_moon_ecef, config_.mu_moon_m3_s2, mu_earth, radius_m, nmax, dCmoon, dSmoon);
+          tides::add_solid_earth_tide1_delta(r_moon_ecef, config_.mu_moon_m3_s2, mu_earth, radius_m, nmax, dCmoon, dSmoon);
           out.solid_tide_moon_mps2 = accel_sph_noncentral(r_ecef, dCmoon, dSmoon, nmax, mu_earth, radius_m);
           dC += dCmoon;
           dS += dSmoon;
