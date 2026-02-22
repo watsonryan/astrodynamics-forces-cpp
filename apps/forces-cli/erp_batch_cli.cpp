@@ -53,8 +53,8 @@ double magnitude(const astroforces::core::Vec3& v) { return astroforces::core::n
 }  // namespace
 
 int main(int argc, char** argv) {
-  if (argc < 3 || argc > 6) {
-    spdlog::error("usage: erp_batch_cli <input_csv> <output_csv> [mass_kg] [area_m2] [cr]");
+  if (argc < 3 || argc > 7) {
+    spdlog::error("usage: erp_batch_cli <input_csv> <output_csv> [mass_kg] [area_m2] [cr] [jpl_ephemeris_file]");
     spdlog::error("input row: epoch_utc_s,x_eci_m,y_eci_m,z_eci_m,vx_eci_mps,vy_eci_mps,vz_eci_mps");
     return 1;
   }
@@ -64,6 +64,7 @@ int main(int argc, char** argv) {
   const double mass_kg = (argc >= 4) ? std::atof(argv[3]) : 600.0;
   const double area_m2 = (argc >= 5) ? std::atof(argv[4]) : 4.0;
   const double cr = (argc >= 6) ? std::atof(argv[5]) : 1.3;
+  const std::string eph_file = (argc >= 7) ? argv[6] : "";
 
   std::ifstream in(input_csv);
   if (!in) {
@@ -78,9 +79,16 @@ int main(int argc, char** argv) {
 
   astroforces::sc::SpacecraftProperties sc{
       .mass_kg = mass_kg, .reference_area_m2 = area_m2, .cd = 2.2, .cr = cr, .use_surface_model = false, .surfaces = {}};
-  const astroforces::forces::ErpAccelerationModel erp{};
+  auto erp = astroforces::forces::ErpAccelerationModel::Create({
+      .ephemeris_file = eph_file,
+  });
+  if (!erp) {
+    spdlog::error("failed to create ERP model");
+    return 4;
+  }
 
-  out << "epoch_utc_s,ax_mps2,ay_mps2,az_mps2,amag_mps2,earth_radiation_pressure_pa,earth_distance_m,area_m2,cr,status\n";
+  out << "epoch_utc_s,ax_mps2,ay_mps2,az_mps2,amag_mps2,earth_radiation_pressure_pa,albedo_pressure_pa,ir_pressure_pa,"
+         "albedo_phase_function,earth_distance_m,area_m2,cr,status\n";
 
   std::string line;
   std::size_t line_no = 0;
@@ -104,11 +112,11 @@ int main(int argc, char** argv) {
     state.velocity_mps = row.velocity_eci_mps;
     state.frame = astroforces::core::Frame::ECI;
 
-    const auto r = erp.evaluate(state, sc);
-    out << fmt::format("{:.6f},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{}\n",
+    const auto r = erp->evaluate(state, sc);
+    out << fmt::format("{:.6f},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{}\n",
                        row.epoch_utc_s, r.acceleration_mps2.x, r.acceleration_mps2.y, r.acceleration_mps2.z,
-                       magnitude(r.acceleration_mps2), r.earth_radiation_pressure_pa, r.earth_distance_m, r.area_m2, r.cr,
-                       static_cast<int>(r.status));
+                       magnitude(r.acceleration_mps2), r.earth_radiation_pressure_pa, r.albedo_pressure_pa, r.ir_pressure_pa,
+                       r.albedo_phase_function, r.earth_distance_m, r.area_m2, r.cr, static_cast<int>(r.status));
   }
 
   spdlog::info("wrote erp batch output: {}", output_csv.string());

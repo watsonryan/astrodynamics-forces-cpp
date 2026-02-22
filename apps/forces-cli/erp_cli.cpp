@@ -5,6 +5,7 @@
  */
 
 #include <cstdlib>
+#include <string>
 
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
@@ -18,9 +19,9 @@ double magnitude(const astroforces::core::Vec3& v) { return astroforces::core::n
 }  // namespace
 
 int main(int argc, char** argv) {
-  if (argc < 8 || argc > 11) {
+  if (argc < 8 || argc > 12) {
     spdlog::error(
-        "usage: erp_cli <x_frame_m> <y_frame_m> <z_frame_m> <vx_frame_mps> <vy_frame_mps> <vz_frame_mps> <epoch_utc_s> [mass_kg] [area_m2] [cr]");
+        "usage: erp_cli <x_frame_m> <y_frame_m> <z_frame_m> <vx_frame_mps> <vy_frame_mps> <vz_frame_mps> <epoch_utc_s> [mass_kg] [area_m2] [cr] [jpl_ephemeris_file]");
     return 1;
   }
 
@@ -33,20 +34,28 @@ int main(int argc, char** argv) {
   const double mass_kg = (argc >= 9) ? std::atof(argv[8]) : 600.0;
   const double area_m2 = (argc >= 10) ? std::atof(argv[9]) : 4.0;
   const double cr = (argc >= 11) ? std::atof(argv[10]) : 1.3;
+  const std::string eph_file = (argc >= 12) ? argv[11] : "";
 
   astroforces::sc::SpacecraftProperties sc{
       .mass_kg = mass_kg, .reference_area_m2 = area_m2, .cd = 2.2, .cr = cr, .use_surface_model = false, .surfaces = {}};
 
-  const astroforces::forces::ErpAccelerationModel erp{};
-  const auto out = erp.evaluate(state, sc);
+  auto erp = astroforces::forces::ErpAccelerationModel::Create({
+      .ephemeris_file = eph_file,
+  });
+  if (!erp) {
+    spdlog::error("failed to create ERP model");
+    return 2;
+  }
+  const auto out = erp->evaluate(state, sc);
   if (out.status != astroforces::core::Status::Ok) {
     spdlog::error("erp evaluation failed: status={}", static_cast<int>(out.status));
-    return 2;
+    return 3;
   }
 
   fmt::print("ax={} ay={} az={} amag={}\n", out.acceleration_mps2.x, out.acceleration_mps2.y, out.acceleration_mps2.z,
              magnitude(out.acceleration_mps2));
-  fmt::print("p_pa={} r_earth_m={} area={} cr={}\n", out.earth_radiation_pressure_pa, out.earth_distance_m, out.area_m2, out.cr);
+  fmt::print("p_total_pa={} p_albedo_pa={} p_ir_pa={} albedo_phase={} r_earth_m={} area={} cr={}\n",
+             out.earth_radiation_pressure_pa, out.albedo_pressure_pa, out.ir_pressure_pa, out.albedo_phase_function,
+             out.earth_distance_m, out.area_m2, out.cr);
   return 0;
 }
-

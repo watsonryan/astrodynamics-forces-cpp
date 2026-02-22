@@ -157,7 +157,8 @@ int main(int argc, char** argv) {
   components.push_back(ComponentModel{
       .label = "erp",
       .frame = astroforces::core::Frame::ECI,
-      .model = std::make_unique<astroforces::forces::ErpPerturbationModel>(astroforces::forces::ErpAccelerationModel{}, &sc, "erp"),
+      .model = std::make_unique<astroforces::forces::ErpPerturbationModel>(
+          astroforces::forces::ErpAccelerationModel({.ephemeris_file = std::filesystem::path(eph_file)}), &sc, "erp"),
   });
   components.push_back(ComponentModel{
       .label = "relativity",

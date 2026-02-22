@@ -113,12 +113,12 @@ Model notes reference: `docs/GRAVITY_MODEL_NOTES.md`
 
 ERP single-state CLI:
 ```bash
-./build/macos-debug/erp_cli 6778137 0 0 0 7670 0 1000000000 600 4 1.3
+./build/macos-debug/erp_cli 6778137 0 0 0 7670 0 1000000000 600 4 1.3 data/required/linux_p1550p2650.440
 ```
 
 ERP batch CLI:
 ```bash
-./build/macos-debug/erp_batch_cli input_eci.csv erp_output.csv 600 4 1.3
+./build/macos-debug/erp_batch_cli input_eci.csv erp_output.csv 600 4 1.3 data/required/linux_p1550p2650.440
 ```
 Output schema reference: `docs/ERP_OUTPUT_SCHEMA.md`
 
