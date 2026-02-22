@@ -215,6 +215,31 @@ inline Mat3 gcrf_to_itrf_rotation(
   return sofa::c2tcio(rc2i, era, rpom);
 }
 
+inline Mat3 gcrf_to_itrf_rotation_exact_no_rates(
+    const double jd_utc,
+    const double jd_tt,
+    const CelestialIntermediatePole& cip,
+    const EarthOrientation& eop) {
+  const double x = cip.x_rad + eop.dX_rad;
+  const double y = cip.y_rad + eop.dY_rad;
+  const double s_cio = cip.s_rad;
+
+  const double r2 = x * x + y * y;
+  const double r = (r2 > 0.0) ? std::sqrt(r2) : 0.0;
+  const double e = (r2 > 0.0) ? std::atan2(y, x) : 0.0;
+  const double d = (r > 0.0) ? std::asin(r) : 0.0;
+
+  const Mat3 rz1 = sofa::rot_z(-(e + s_cio));
+  const Mat3 ry2 = sofa::rot_y(d);
+  const Mat3 rz3 = sofa::rot_z(e);
+  const Mat3 rc2i = mat_mul(rz1, mat_mul(ry2, rz3));
+
+  const double jd_ut1 = jd_utc + eop.dut1_s / constants::kSecondsPerDay;
+  const Mat3 r3era = sofa::rot_z(earth_rotation_angle_rad(jd_ut1));
+  const Mat3 rpom = polar_motion_matrix(eop, tio_locator_sp_rad(jd_tt));
+  return mat_mul(rpom, mat_mul(r3era, rc2i));
+}
+
 inline RotationWithDerivative gcrf_to_itrf_rotation_with_derivative_exact(
     const double jd_utc,
     const double jd_tt,
@@ -315,7 +340,7 @@ inline Vec3 gcrf_to_itrf_position(
     const double jd_tt,
     const CelestialIntermediatePole& cip,
     const EarthOrientation& eop) {
-  return mat_vec(gcrf_to_itrf_rotation_with_derivative(jd_utc, jd_tt, cip, eop).r, r_gcrf);
+  return mat_vec(gcrf_to_itrf_rotation_exact_no_rates(jd_utc, jd_tt, cip, eop), r_gcrf);
 }
 
 inline Vec3 itrf_to_gcrf_position(
@@ -324,7 +349,7 @@ inline Vec3 itrf_to_gcrf_position(
     const double jd_tt,
     const CelestialIntermediatePole& cip,
     const EarthOrientation& eop) {
-  const Mat3 rt = mat_transpose(gcrf_to_itrf_rotation_with_derivative(jd_utc, jd_tt, cip, eop).r);
+  const Mat3 rt = mat_transpose(gcrf_to_itrf_rotation_exact_no_rates(jd_utc, jd_tt, cip, eop));
   return mat_vec(rt, r_itrf);
 }
 
