@@ -5,7 +5,7 @@
  */
 #pragma once
 
-#include <optional>
+#include <memory>
 
 #include "astroforces/core/interfaces.hpp"
 #include "astroforces/core/eop.hpp"
@@ -38,14 +38,14 @@ class DragAccelerationModel {
                         const astroforces::core::IAtmosphereModel& atmosphere,
                         const astroforces::core::IWindModel& wind,
                         DragFrameTransformMode transform_mode = DragFrameTransformMode::ApproxGmst,
-                        const astroforces::core::eop::Series* eop_series = nullptr,
-                        const astroforces::core::cip::Series* cip_series = nullptr)
+                        std::shared_ptr<const astroforces::core::eop::Series> eop_series = nullptr,
+                        std::shared_ptr<const astroforces::core::cip::Series> cip_series = nullptr)
       : weather_(weather),
         atmosphere_(atmosphere),
         wind_(wind),
         transform_mode_(transform_mode),
-        eop_series_(eop_series != nullptr ? std::optional<astroforces::core::eop::Series>(*eop_series) : std::nullopt),
-        cip_series_(cip_series != nullptr ? std::optional<astroforces::core::cip::Series>(*cip_series) : std::nullopt) {}
+        eop_series_(std::move(eop_series)),
+        cip_series_(std::move(cip_series)) {}
 
   [[nodiscard]] DragResult evaluate(const astroforces::core::StateVector& state,
                                     const astroforces::sc::SpacecraftProperties& sc) const;
@@ -55,8 +55,8 @@ class DragAccelerationModel {
   const astroforces::core::IAtmosphereModel& atmosphere_;
   const astroforces::core::IWindModel& wind_;
   DragFrameTransformMode transform_mode_{};
-  std::optional<astroforces::core::eop::Series> eop_series_{};
-  std::optional<astroforces::core::cip::Series> cip_series_{};
+  std::shared_ptr<const astroforces::core::eop::Series> eop_series_{};
+  std::shared_ptr<const astroforces::core::cip::Series> cip_series_{};
 };
 
 }  // namespace astroforces::forces

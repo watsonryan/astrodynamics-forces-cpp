@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <memory>
 #include <random>
 #include <sstream>
 #include <string>
@@ -147,13 +148,26 @@ int main() {
       atmosphere,
       wind,
       forces::DragFrameTransformMode::StrictGcrfItrf,
-      &eop_series,
-      &cip_series);
+      std::make_shared<const core::eop::Series>(eop_series),
+      std::make_shared<const core::cip::Series>(cip_series));
 
   const auto out_eci_strict = strict_model.evaluate(state_eci, sc);
   if (out_eci_strict.status != core::Status::Ok || !std::isfinite(out_eci_strict.relative_speed_mps)) {
     spdlog::error("strict eci drag evaluation failed");
     return 11;
+  }
+
+  forces::DragAccelerationModel strict_model_missing(
+      weather,
+      atmosphere,
+      wind,
+      forces::DragFrameTransformMode::StrictGcrfItrf,
+      nullptr,
+      nullptr);
+  const auto out_eci_strict_missing = strict_model_missing.evaluate(state_eci, sc);
+  if (out_eci_strict_missing.status != core::Status::DataUnavailable) {
+    spdlog::error("strict eci missing transform support should be DataUnavailable");
+    return 12;
   }
 
   sc::SpacecraftProperties macro_sc{
