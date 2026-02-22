@@ -49,7 +49,6 @@ class SrpAccelerationModel final {
 
   Config config_{};
   std::shared_ptr<jpl::eph::Ephemeris> ephemeris_{};
-  mutable std::shared_ptr<jpl::eph::Workspace> workspace_{};
 };
 
 }  // namespace astroforces::forces

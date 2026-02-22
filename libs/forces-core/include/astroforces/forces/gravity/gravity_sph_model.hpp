@@ -84,9 +84,8 @@ class GravitySphAccelerationModel final {
   Config config_{};
   std::shared_ptr<GravityFieldData> field_{};
   std::shared_ptr<jpl::eph::Ephemeris> ephemeris_{};
-  mutable std::shared_ptr<jpl::eph::Workspace> workspace_{};
-  std::shared_ptr<astroforces::core::eop::Series> eop_{};
-  std::shared_ptr<astroforces::core::cip::Series> cip_{};
+  std::shared_ptr<const astroforces::core::eop::Series> eop_{};
+  std::shared_ptr<const astroforces::core::cip::Series> cip_{};
   std::shared_ptr<tides::OceanPoleTideModel> ocean_pole_tide_{};
   std::shared_ptr<tides::Aod1bTideModel> aod_tide_{};
   std::shared_ptr<tides::ConstituentTideModel> ocean_tide_{};

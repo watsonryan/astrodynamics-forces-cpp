@@ -480,6 +480,11 @@ bool finite_vec(const astroforces::core::Vec3& v) {
   return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
 }
 
+jpl::eph::Workspace& thread_local_workspace() {
+  thread_local jpl::eph::Workspace workspace{};
+  return workspace;
+}
+
 }  // namespace
 
 std::unique_ptr<GravitySphAccelerationModel> GravitySphAccelerationModel::Create(const Config& config) {
@@ -493,7 +498,6 @@ std::unique_ptr<GravitySphAccelerationModel> GravitySphAccelerationModel::Create
     auto opened = jpl::eph::Ephemeris::Open(config.ephemeris_file.string());
     if (opened.has_value()) {
       out->ephemeris_ = opened.value();
-      out->workspace_ = std::make_shared<jpl::eph::Workspace>();
     }
   }
 
@@ -556,6 +560,7 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
   const double jd_utc = astroforces::core::utc_seconds_to_julian_date_utc(state.epoch.utc_seconds);
   const double jd_tt = astroforces::core::utc_seconds_to_julian_date_tt(state.epoch.utc_seconds);
   const double mjd_tt = jd_tt - 2400000.5;
+  auto& workspace = thread_local_workspace();
 
   const bool need_itrf_gcrf_transform
       = (state.frame == astroforces::core::Frame::ECI)
@@ -643,7 +648,7 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
       }
 
       if (config_.use_solid_earth_tides && (config_.use_sun_tide || config_.use_moon_tide || config_.use_solid_earth_tide2)) {
-        if ((config_.use_sun_tide || config_.use_moon_tide) && (!ephemeris_ || !workspace_)) {
+        if ((config_.use_sun_tide || config_.use_moon_tide) && !ephemeris_) {
           return GravitySphResult{.status = astroforces::core::Status::DataUnavailable};
         }
 
@@ -651,7 +656,7 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
         Eigen::MatrixXd dS = Eigen::MatrixXd::Zero(Seff.rows(), Seff.cols());
 
         if (config_.use_sun_tide) {
-          const auto sun = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Sun, jpl::eph::Body::Earth, false, *workspace_);
+          const auto sun = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Sun, jpl::eph::Body::Earth, false, workspace);
           if (!sun.has_value()) {
             return GravitySphResult{.status = map_jpl_error(sun.error())};
           }
@@ -661,7 +666,7 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
         }
 
         if (config_.use_moon_tide) {
-          const auto moon = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Moon, jpl::eph::Body::Earth, false, *workspace_);
+          const auto moon = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Moon, jpl::eph::Body::Earth, false, workspace);
           if (!moon.has_value()) {
             return GravitySphResult{.status = map_jpl_error(moon.error())};
           }

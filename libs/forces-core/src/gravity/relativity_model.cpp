@@ -36,6 +36,11 @@ bool finite_vec(const astroforces::core::Vec3& v) {
   return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
 }
 
+jpl::eph::Workspace& thread_local_workspace() {
+  thread_local jpl::eph::Workspace workspace{};
+  return workspace;
+}
+
 }  // namespace
 
 std::unique_ptr<RelativityAccelerationModel> RelativityAccelerationModel::Create(const Config& config) {
@@ -48,7 +53,6 @@ std::unique_ptr<RelativityAccelerationModel> RelativityAccelerationModel::Create
     return out;
   }
   out->ephemeris_ = opened.value();
-  out->workspace_ = std::make_shared<jpl::eph::Workspace>();
   return out;
 }
 
@@ -84,11 +88,12 @@ RelativityResult RelativityAccelerationModel::evaluate(const astroforces::core::
   }
 
   if (config_.use_geodesic_precession) {
-    if (!ephemeris_ || !workspace_) {
+    if (!ephemeris_) {
       return RelativityResult{.status = astroforces::core::Status::DataUnavailable};
     }
+    auto& workspace = thread_local_workspace();
     const double jd_utc = astroforces::core::utc_seconds_to_julian_date_utc(state.epoch.utc_seconds);
-    const auto sun_wrt_earth = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Sun, jpl::eph::Body::Earth, true, *workspace_);
+    const auto sun_wrt_earth = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Sun, jpl::eph::Body::Earth, true, workspace);
     if (!sun_wrt_earth.has_value()) {
       return RelativityResult{.status = map_jpl_error(sun_wrt_earth.error())};
     }

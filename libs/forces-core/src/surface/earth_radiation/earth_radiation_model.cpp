@@ -55,6 +55,11 @@ double lambert_phase_function(double phase_angle_rad) {
   return std::max(0.0, phi);
 }
 
+jpl::eph::Workspace& thread_local_workspace() {
+  thread_local jpl::eph::Workspace workspace{};
+  return workspace;
+}
+
 }  // namespace
 
 std::unique_ptr<EarthRadiationAccelerationModel> EarthRadiationAccelerationModel::Create(const Config& config) {
@@ -70,7 +75,6 @@ EarthRadiationAccelerationModel::EarthRadiationAccelerationModel(const Config& c
     return;
   }
   ephemeris_ = opened.value();
-  workspace_ = std::make_shared<jpl::eph::Workspace>();
 }
 
 EarthRadiationResult EarthRadiationAccelerationModel::evaluate(const astroforces::core::StateVector& state,
@@ -94,9 +98,10 @@ EarthRadiationResult EarthRadiationAccelerationModel::evaluate(const astroforces
 
   double albedo_phase = 1.0;
   double albedo_eclipse_factor = 1.0;
-  if (config_.use_albedo && ephemeris_ && workspace_ && state.frame == astroforces::core::Frame::ECI) {
+  if (config_.use_albedo && ephemeris_ && state.frame == astroforces::core::Frame::ECI) {
+    auto& workspace = thread_local_workspace();
     const double jd_utc = astroforces::core::utc_seconds_to_julian_date_utc(state.epoch.utc_seconds);
-    const auto sun = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Sun, jpl::eph::Body::Earth, false, *workspace_);
+    const auto sun = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Sun, jpl::eph::Body::Earth, false, workspace);
     if (!sun.has_value()) {
       return EarthRadiationResult{.status = map_jpl_error(sun.error())};
     }
@@ -110,7 +115,7 @@ EarthRadiationResult EarthRadiationAccelerationModel::evaluate(const astroforces
       albedo_phase = lambert_phase_function(phase);
     }
     if (config_.use_eclipse) {
-      const auto moon = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Moon, jpl::eph::Body::Earth, false, *workspace_);
+      const auto moon = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Moon, jpl::eph::Body::Earth, false, workspace);
       astroforces::core::Vec3 r_moon{};
       astroforces::core::Vec3* moon_ptr = nullptr;
       if (moon.has_value()) {

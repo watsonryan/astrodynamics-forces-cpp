@@ -69,6 +69,11 @@ astroforces::core::Vec3 goce_eq79_indirect_j2(const astroforces::core::Vec3& r_t
   };
 }
 
+jpl::eph::Workspace& thread_local_workspace() {
+  thread_local jpl::eph::Workspace workspace{};
+  return workspace;
+}
+
 }  // namespace
 
 ThirdBodyPerturbationModel::ThirdBodyPerturbationModel(Config config) : config_(std::move(config)) {}
@@ -80,7 +85,6 @@ std::unique_ptr<ThirdBodyPerturbationModel> ThirdBodyPerturbationModel::Create(c
     return out;
   }
   out->ephemeris_ = opened.value();
-  out->workspace_ = std::make_shared<jpl::eph::Workspace>();
   return out;
 }
 
@@ -89,10 +93,11 @@ PerturbationContribution ThirdBodyPerturbationModel::evaluate(const Perturbation
   out.name = config_.name;
   out.type = PerturbationType::ThirdBody;
 
-  if (!ephemeris_ || !workspace_) {
+  if (!ephemeris_) {
     out.status = astroforces::core::Status::DataUnavailable;
     return out;
   }
+  auto& workspace = thread_local_workspace();
   if (request.state.frame != astroforces::core::Frame::ECI) {
     out.status = astroforces::core::Status::InvalidInput;
     return out;
@@ -102,7 +107,7 @@ PerturbationContribution ThirdBodyPerturbationModel::evaluate(const Perturbation
   const double jed_tdb = astroforces::core::utc_seconds_to_julian_date_utc(request.state.epoch.utc_seconds);
 
   if (config_.use_sun) {
-    const auto sun = ephemeris_->PlephSi(jed_tdb, jpl::eph::Body::Sun, jpl::eph::Body::Earth, false, *workspace_);
+    const auto sun = ephemeris_->PlephSi(jed_tdb, jpl::eph::Body::Sun, jpl::eph::Body::Earth, false, workspace);
     if (!sun.has_value()) {
       out.status = map_jpl_error(sun.error());
       return out;
@@ -116,7 +121,7 @@ PerturbationContribution ThirdBodyPerturbationModel::evaluate(const Perturbation
   }
 
   if (config_.use_moon) {
-    const auto moon = ephemeris_->PlephSi(jed_tdb, jpl::eph::Body::Moon, jpl::eph::Body::Earth, false, *workspace_);
+    const auto moon = ephemeris_->PlephSi(jed_tdb, jpl::eph::Body::Moon, jpl::eph::Body::Earth, false, workspace);
     if (!moon.has_value()) {
       out.status = map_jpl_error(moon.error());
       return out;

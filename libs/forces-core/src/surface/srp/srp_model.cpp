@@ -44,6 +44,11 @@ astroforces::core::Vec3 body_from_frame_mul(const std::array<double, 9>& dcm, co
   };
 }
 
+jpl::eph::Workspace& thread_local_workspace() {
+  thread_local jpl::eph::Workspace workspace{};
+  return workspace;
+}
+
 }  // namespace
 
 std::unique_ptr<SrpAccelerationModel> SrpAccelerationModel::Create(const Config& config) {
@@ -53,13 +58,12 @@ std::unique_ptr<SrpAccelerationModel> SrpAccelerationModel::Create(const Config&
     return out;
   }
   out->ephemeris_ = opened.value();
-  out->workspace_ = std::make_shared<jpl::eph::Workspace>();
   return out;
 }
 
 SrpResult SrpAccelerationModel::evaluate(const astroforces::core::StateVector& state,
                                          const astroforces::sc::SpacecraftProperties& sc) const {
-  if (!ephemeris_ || !workspace_) {
+  if (!ephemeris_) {
     return SrpResult{.status = astroforces::core::Status::DataUnavailable};
   }
   if (state.frame != astroforces::core::Frame::ECI || sc.mass_kg <= 0.0) {
@@ -67,7 +71,8 @@ SrpResult SrpAccelerationModel::evaluate(const astroforces::core::StateVector& s
   }
 
   const double jd_utc = astroforces::core::utc_seconds_to_julian_date_utc(state.epoch.utc_seconds);
-  const auto sun = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Sun, jpl::eph::Body::Earth, false, *workspace_);
+  auto& workspace = thread_local_workspace();
+  const auto sun = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Sun, jpl::eph::Body::Earth, false, workspace);
   if (!sun.has_value()) {
     return SrpResult{.status = map_jpl_error(sun.error())};
   }
@@ -82,7 +87,7 @@ SrpResult SrpAccelerationModel::evaluate(const astroforces::core::StateVector& s
   astroforces::core::Vec3 r_moon_eci_m{};
   bool has_moon = false;
   if (config_.use_eclipse) {
-    const auto moon = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Moon, jpl::eph::Body::Earth, false, *workspace_);
+    const auto moon = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Moon, jpl::eph::Body::Earth, false, workspace);
     if (moon.has_value()) {
       r_moon_eci_m = to_vec3(moon.value().pv);
       has_moon = true;
