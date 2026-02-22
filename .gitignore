@@ -2,3 +2,4 @@
 .DS_Store
 compile_commands.json
 /data/local/
+/data/required/

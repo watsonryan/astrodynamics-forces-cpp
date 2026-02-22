@@ -58,7 +58,7 @@ External model repos are pulled via CPM with HTTPS URLs by default; override cac
 
 Batch CLI:
 ```bash
-./build/macos-debug/drag_batch_cli input.csv output.csv csv nrlmsis /path/to/msis21.parm zero "" /path/to/SW-Last5Years.csv
+./build/macos-debug/drag_batch_cli input.csv output.csv csv nrlmsis /path/to/msis21.parm zero "" data/required/SW-Last5Years.csv
 ```
 Input row format:
 - `epoch_utc_s,x_m,y_m,z_m,vx_mps,vy_mps,vz_mps`
@@ -67,17 +67,17 @@ Input row format:
 Optional weather input:
 - Pass CelesTrak 5-year CSV as final arg:
 ```bash
-./build/macos-debug/drag_cli 6778137 0 0 0 7670 0 1000000000 nrlmsis /path/to/msis21.parm zero "" /path/to/SW-Last5Years.csv
+./build/macos-debug/drag_cli 6778137 0 0 0 7670 0 1000000000 nrlmsis /path/to/msis21.parm zero "" data/required/SW-Last5Years.csv
 ```
 
 Third-body single-state CLI:
 ```bash
-./build/macos-debug/third_body_cli 6778137 0 0 0 7670 0 1000000000 /path/to/linux_p1550p2650.440 1 1
+./build/macos-debug/third_body_cli 6778137 0 0 0 7670 0 1000000000 data/required/linux_p1550p2650.440 1 1
 ```
 
 Third-body batch CLI:
 ```bash
-./build/macos-debug/third_body_batch_cli input_eci.csv third_body_output.csv /path/to/linux_p1550p2650.440 1 1
+./build/macos-debug/third_body_batch_cli input_eci.csv third_body_output.csv data/required/linux_p1550p2650.440 1 1
 ```
 Input row format:
 - `epoch_utc_s,x_eci_m,y_eci_m,z_eci_m,vx_eci_mps,vy_eci_mps,vz_eci_mps`
@@ -107,7 +107,7 @@ General perturbation interface:
 
 Gravity+tides single-state CLI:
 ```bash
-./build/macos-debug/gravity_sph_cli 6778137 0 0 0 7670 0 1000000000 /path/to/EGM2008.gfc 120 eci /path/to/linux_p1550p2650.440 1
+./build/macos-debug/gravity_sph_cli 6778137 0 0 0 7670 0 1000000000 data/required/EIGEN-6S4.gfc 120 eci data/required/linux_p1550p2650.440 1
 ```
 Model notes reference: `docs/GRAVITY_MODEL_NOTES.md`
 
@@ -124,30 +124,30 @@ Output schema reference: `docs/ERP_OUTPUT_SCHEMA.md`
 
 Relativity single-state CLI:
 ```bash
-./build/macos-debug/relativity_cli 6778137 0 0 0 7670 0 1000000000 /path/to/linux_p1550p2650.440 1
+./build/macos-debug/relativity_cli 6778137 0 0 0 7670 0 1000000000 data/required/linux_p1550p2650.440 1
 ```
 Output schema reference: `docs/RELATIVITY_OUTPUT_SCHEMA.md`
 Model notes reference: `docs/RELATIVITY_MODEL_NOTES.md`
 
 SRP single-state CLI:
 ```bash
-./build/macos-debug/srp_cli 6778137 0 0 0 7670 0 1000000000 /path/to/linux_p1550p2650.440 600 4 1.3 0
+./build/macos-debug/srp_cli 6778137 0 0 0 7670 0 1000000000 data/required/linux_p1550p2650.440 600 4 1.3 0
 ```
 
 SRP batch CLI:
 ```bash
-./build/macos-debug/srp_batch_cli input_eci.csv srp_output.csv /path/to/linux_p1550p2650.440 600 4 1.3 0
+./build/macos-debug/srp_batch_cli input_eci.csv srp_output.csv data/required/linux_p1550p2650.440 600 4 1.3 0
 ```
 Output schema reference: `docs/SRP_OUTPUT_SCHEMA.md`
 
 Perturbation-vs-altitude profiling:
 ```bash
 ./build/macos-debug/perturbation_profile_cli perturbation_profile.csv 200 20000 500 \
-  /path/to/DTM_2020_F107_Kp.dat \
-  /path/to/SW-Last5Years.csv \
-  /path/to/linux_p1550p2650.440 \
+  data/required/DTM_2020_F107_Kp.dat \
+  data/required/SW-Last5Years.csv \
+  data/required/linux_p1550p2650.440 \
   1000000000 \
-  /path/to/EIGEN-6S4.gfc \
+  data/required/EIGEN-6S4.gfc \
   120
 python3 scripts/plot_perturbation_profile.py perturbation_profile.csv --output-stem perturbation_vs_altitude --column single
 ```
@@ -173,7 +173,7 @@ Notes:
 Gravity coefficient sources:
 - Primary catalog/download portal: `https://icgem.gfz.de/tom_longtime`
 - Recommended reference model for comparison: `EIGEN-6S4 (Version 2)` (GFZ/GRGS), DOI `10.5880/icgem.2016.008`.
-- Repo-local example path (ignored by git): `data/local/EIGEN-6S4.gfc`.
+- Repo-local required data path (tracked): `data/required/EIGEN-6S4.gfc`.
 
 Performance benchmark:
 ```bash
