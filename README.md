@@ -96,7 +96,8 @@ Drag area modes:
 - Macro-model: set `use_surface_model=true` with surfaces; projected area is computed from plate normals and flow direction in body frame.
 - Body-frame flow direction uses `StateVector::body_from_frame_dcm` (row-major DCM).
 - Drag frame transform modes:
-  - `ApproxGmst` (default): lightweight GMST-based frame conversion.
+  - `AutoPreferStrict` (default): use strict GCRF/ITRF when EOP+CIP data is available, otherwise fall back to GMST.
+  - `ApproxGmst`: lightweight GMST-based frame conversion.
   - `StrictGcrfItrf`: full GCRF/ITRF transform using EOP + CIP series.
   - In strict mode, drag returns `Status::DataUnavailable` if required EOP/CIP samples are missing at epoch.
 
@@ -200,8 +201,5 @@ Gravity coefficient sources:
 
 Performance benchmark:
 ```bash
-./build/macos-debug/astroforces_perf_benchmark
+./build/macos-debug/astroforces_perf_benchmark --samples 40 --iters 5000
 ```
-Environment controls:
-- `ASTRO_FORCES_PERF_SAMPLES` (default `40`)
-- `ASTRO_FORCES_PERF_ITERS` (default `5000`)

@@ -5,7 +5,7 @@
  */
 
 #include <chrono>
-#include <cstdlib>
+#include <string>
 #include <vector>
 
 #include <spdlog/spdlog.h>
@@ -15,26 +15,28 @@
 #include "astroforces/sc/spacecraft.hpp"
 #include "astroforces/weather/static_provider.hpp"
 
-namespace {
-
-int read_env_int(const char* name, int fallback) {
-  const char* raw = std::getenv(name);
-  if (!raw || *raw == '\0') {
-    return fallback;
-  }
-  return std::atoi(raw);
-}
-
-}  // namespace
-
-int main() {
+int main(int argc, char** argv) {
   using namespace astroforces;
   using clock = std::chrono::steady_clock;
 
-  const int samples = read_env_int("ASTRO_FORCES_PERF_SAMPLES", 40);
-  const int iters = read_env_int("ASTRO_FORCES_PERF_ITERS", 5000);
+  int samples = 40;
+  int iters = 5000;
+  for (int i = 1; i < argc; ++i) {
+    const std::string arg = argv[i];
+    if (arg == "--samples" && (i + 1) < argc) {
+      samples = std::stoi(argv[++i]);
+      continue;
+    }
+    if (arg == "--iters" && (i + 1) < argc) {
+      iters = std::stoi(argv[++i]);
+      continue;
+    }
+    spdlog::error("usage: astroforces_perf_benchmark [--samples N] [--iters N]");
+    return 1;
+  }
+
   if (samples <= 0 || iters <= 0) {
-    spdlog::error("invalid perf env configuration");
+    spdlog::error("invalid perf configuration");
     return 1;
   }
 
