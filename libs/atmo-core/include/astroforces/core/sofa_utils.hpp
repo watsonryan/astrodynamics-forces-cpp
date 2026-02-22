@@ -66,7 +66,7 @@ inline Mat3 c2ixys(const double x_rad, const double y_rad, const double s_rad) {
   const double r2 = x_rad * x_rad + y_rad * y_rad;
   const double e = (r2 > 0.0) ? std::atan2(y_rad, x_rad) : 0.0;
   const double d = std::atan(std::sqrt(r2 / std::max(1e-30, 1.0 - r2)));
-  return mat_mul(rot_z(e), mat_mul(rot_y(d), rot_z(-(e + s_rad))));
+  return mat_mul(rot_z(-(e + s_rad)), mat_mul(rot_y(d), rot_z(e)));
 }
 
 // SOFA iauPom00-style polar-motion matrix.
