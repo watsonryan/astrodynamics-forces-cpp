@@ -1,6 +1,6 @@
 /**
  * @file hwm14_adapter.hpp
- * @brief Adapter between dragcpp wind interface and HWM14 model.
+ * @brief Adapter between astroforces wind interface and HWM14 model.
  * @author Watosn
  */
 #pragma once

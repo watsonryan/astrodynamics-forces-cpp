@@ -193,14 +193,14 @@ class Series {
   }
 
  private:
-  static double parse_field(const std::string& line, const int start, const int width) {
+  static std::optional<double> parse_field(const std::string& line, const int start, const int width) {
     if (static_cast<int>(line.size()) < start + width) {
-      return 0.0;
+      return std::nullopt;
     }
     try {
       return std::stod(line.substr(static_cast<std::size_t>(start), static_cast<std::size_t>(width)));
     } catch (...) {
-      return 0.0;
+      return std::nullopt;
     }
   }
 
@@ -232,8 +232,16 @@ class Series {
         rec.eop.lod_s = (tokens.size() > 12) ? std::stod(tokens[12]) * 1e-3 : 0.0;
         // IERS finals2000A stores dX/dY in mas in later columns; parse by fixed
         // columns because token layouts vary with spacing/flags.
-        rec.eop.dX_rad = (line.size() >= 106) ? mas_to_rad(parse_field(line, 97, 9)) : 0.0;
-        rec.eop.dY_rad = (line.size() >= 125) ? mas_to_rad(parse_field(line, 116, 9)) : 0.0;
+        if (line.size() >= 106) {
+          if (const auto dx_mas = parse_field(line, 97, 9); dx_mas.has_value()) {
+            rec.eop.dX_rad = mas_to_rad(*dx_mas);
+          }
+        }
+        if (line.size() >= 125) {
+          if (const auto dy_mas = parse_field(line, 116, 9); dy_mas.has_value()) {
+            rec.eop.dY_rad = mas_to_rad(*dy_mas);
+          }
+        }
         rec.predicted = (tokens.size() > 9 && (tokens[4] == "P" || tokens[9] == "P"));
         if (rec.mjd_utc <= 0.0) {
           return std::nullopt;
@@ -249,23 +257,36 @@ class Series {
     }
 
     // Fallback: fixed-column parse for strict IERS layouts.
-    const double mjd = parse_field(line, 7, 8);
-    if (mjd <= 0.0) {
+    const auto mjd = parse_field(line, 7, 8);
+    const auto xp_arcsec = parse_field(line, 18, 9);
+    const auto yp_arcsec = parse_field(line, 37, 9);
+    const auto ut1_utc_s = parse_field(line, 58, 10);
+    if (!mjd.has_value() || !xp_arcsec.has_value() || !yp_arcsec.has_value() || !ut1_utc_s.has_value() || *mjd <= 0.0) {
       return std::nullopt;
     }
-    const double xp_arcsec = parse_field(line, 18, 9);
-    const double yp_arcsec = parse_field(line, 37, 9);
-    const double ut1_utc_s = parse_field(line, 58, 10);
-    const double lod_s = (line.size() >= 93) ? parse_field(line, 79, 7) * 1e-3 : 0.0;
+    double lod_s = 0.0;
+    if (line.size() >= 93) {
+      if (const auto lod_ms = parse_field(line, 79, 7); lod_ms.has_value()) {
+        lod_s = (*lod_ms) * 1e-3;
+      }
+    }
 
     Record rec{};
-    rec.mjd_utc = mjd;
-    rec.eop.xp_rad = xp_arcsec * constants::kArcsecToRad;
-    rec.eop.yp_rad = yp_arcsec * constants::kArcsecToRad;
-    rec.eop.dut1_s = ut1_utc_s;
+    rec.mjd_utc = *mjd;
+    rec.eop.xp_rad = (*xp_arcsec) * constants::kArcsecToRad;
+    rec.eop.yp_rad = (*yp_arcsec) * constants::kArcsecToRad;
+    rec.eop.dut1_s = *ut1_utc_s;
     rec.eop.lod_s = lod_s;
-    rec.eop.dX_rad = (line.size() >= 106) ? mas_to_rad(parse_field(line, 97, 9)) : 0.0;
-    rec.eop.dY_rad = (line.size() >= 125) ? mas_to_rad(parse_field(line, 116, 9)) : 0.0;
+    if (line.size() >= 106) {
+      if (const auto dx_mas = parse_field(line, 97, 9); dx_mas.has_value()) {
+        rec.eop.dX_rad = mas_to_rad(*dx_mas);
+      }
+    }
+    if (line.size() >= 125) {
+      if (const auto dy_mas = parse_field(line, 116, 9); dy_mas.has_value()) {
+        rec.eop.dY_rad = mas_to_rad(*dy_mas);
+      }
+    }
     rec.predicted = (line.size() > 57 && (line[16] == 'P' || line[57] == 'P'));
     return rec;
   }

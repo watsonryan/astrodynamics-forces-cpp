@@ -1,6 +1,6 @@
 /**
  * @file dtm2020_adapter.hpp
- * @brief Adapter between dragcpp atmosphere interface and DTM2020 model.
+ * @brief Adapter between astroforces atmosphere interface and DTM2020 model.
  * @author Watosn
  */
 #pragma once

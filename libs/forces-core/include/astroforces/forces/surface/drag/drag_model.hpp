@@ -15,6 +15,7 @@
 namespace astroforces::forces {
 
 enum class DragFrameTransformMode : unsigned char {
+  AutoPreferStrict,
   ApproxGmst,
   StrictGcrfItrf,
 };
@@ -37,7 +38,7 @@ class DragAccelerationModel {
   DragAccelerationModel(const astroforces::core::ISpaceWeatherProvider& weather,
                         const astroforces::core::IAtmosphereModel& atmosphere,
                         const astroforces::core::IWindModel& wind,
-                        DragFrameTransformMode transform_mode = DragFrameTransformMode::ApproxGmst,
+                        DragFrameTransformMode transform_mode = DragFrameTransformMode::AutoPreferStrict,
                         std::shared_ptr<const astroforces::core::eop::Series> eop_series = nullptr,
                         std::shared_ptr<const astroforces::core::cip::Series> cip_series = nullptr)
       : weather_(weather),

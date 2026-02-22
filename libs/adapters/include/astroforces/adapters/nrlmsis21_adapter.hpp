@@ -1,6 +1,6 @@
 /**
  * @file nrlmsis21_adapter.hpp
- * @brief Adapter between dragcpp atmosphere interface and NRLMSIS 2.1 model.
+ * @brief Adapter between astroforces atmosphere interface and NRLMSIS 2.1 model.
  * @author Watosn
  */
 #pragma once
