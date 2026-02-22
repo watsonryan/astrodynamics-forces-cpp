@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -108,16 +107,7 @@ inline bool load_table_from_file(const std::string& path, Table* out) {
 }
 
 inline const Table& active_table() {
-  static const Table table = []() {
-    const char* env = std::getenv("ASTROFORCES_LEAP_SECONDS_FILE");
-    if (env != nullptr && env[0] != '\0') {
-      Table loaded{};
-      if (load_table_from_file(std::string(env), &loaded)) {
-        return loaded;
-      }
-    }
-    return default_table();
-  }();
+  static const Table table = default_table();
   return table;
 }
 

@@ -146,7 +146,6 @@ add_executable(drag_cli apps/forces-cli/drag_cli.cpp)
 target_link_libraries(drag_cli PRIVATE
   astroforces_core
   astroforces_space_weather
-  astroforces_sc_props
   astroforces_adapters
   astroforces_models_basic
   astroforces_forces_core)
@@ -155,7 +154,6 @@ add_executable(drag_batch_cli apps/forces-cli/drag_batch_cli.cpp)
 target_link_libraries(drag_batch_cli PRIVATE
   astroforces_core
   astroforces_space_weather
-  astroforces_sc_props
   astroforces_adapters
   astroforces_models_basic
   astroforces_forces_core)
@@ -164,7 +162,6 @@ add_executable(perturbation_profile_cli apps/forces-cli/perturbation_profile_cli
 target_link_libraries(perturbation_profile_cli PRIVATE
   astroforces_core
   astroforces_space_weather
-  astroforces_sc_props
   astroforces_adapters
   astroforces_models_basic
   astroforces_forces_core)
@@ -182,37 +179,31 @@ target_link_libraries(third_body_batch_cli PRIVATE
 add_executable(srp_cli apps/forces-cli/srp_cli.cpp)
 target_link_libraries(srp_cli PRIVATE
   astroforces_core
-  astroforces_sc_props
   astroforces_forces_core)
 
 add_executable(srp_batch_cli apps/forces-cli/srp_batch_cli.cpp)
 target_link_libraries(srp_batch_cli PRIVATE
   astroforces_core
-  astroforces_sc_props
   astroforces_forces_core)
 
 add_executable(earth_radiation_cli apps/forces-cli/earth_radiation_cli.cpp)
 target_link_libraries(earth_radiation_cli PRIVATE
   astroforces_core
-  astroforces_sc_props
   astroforces_forces_core)
 
 add_executable(earth_radiation_batch_cli apps/forces-cli/earth_radiation_batch_cli.cpp)
 target_link_libraries(earth_radiation_batch_cli PRIVATE
   astroforces_core
-  astroforces_sc_props
   astroforces_forces_core)
 
 add_executable(antenna_thrust_cli apps/forces-cli/antenna_thrust_cli.cpp)
 target_link_libraries(antenna_thrust_cli PRIVATE
   astroforces_core
-  astroforces_sc_props
   astroforces_forces_core)
 
 add_executable(antenna_thrust_batch_cli apps/forces-cli/antenna_thrust_batch_cli.cpp)
 target_link_libraries(antenna_thrust_batch_cli PRIVATE
   astroforces_core
-  astroforces_sc_props
   astroforces_forces_core)
 
 add_executable(relativity_cli apps/forces-cli/relativity_cli.cpp)
@@ -254,7 +245,6 @@ if(ASTROFORCES_BUILD_TESTS)
   target_link_libraries(astroforces_test_drag_core PRIVATE
     astroforces_core
     astroforces_space_weather
-    astroforces_sc_props
     astroforces_models_basic
     astroforces_forces_core)
   add_test(NAME DragCore COMMAND astroforces_test_drag_core)
@@ -263,7 +253,6 @@ if(ASTROFORCES_BUILD_TESTS)
   target_link_libraries(astroforces_test_end_to_end PRIVATE
     astroforces_core
     astroforces_space_weather
-    astroforces_sc_props
     astroforces_models_basic
     astroforces_forces_core)
   add_test(NAME DragEndToEnd COMMAND astroforces_test_end_to_end)
@@ -272,7 +261,6 @@ if(ASTROFORCES_BUILD_TESTS)
   target_link_libraries(astroforces_test_adapters PRIVATE
     astroforces_core
     astroforces_space_weather
-    astroforces_sc_props
     astroforces_forces_core
     astroforces_adapters)
   target_compile_definitions(astroforces_test_adapters PRIVATE
@@ -299,7 +287,6 @@ if(ASTROFORCES_BUILD_TESTS)
   target_link_libraries(astroforces_test_perturbation_stack PRIVATE
     astroforces_core
     astroforces_space_weather
-    astroforces_sc_props
     astroforces_models_basic
     astroforces_forces_core)
   add_test(NAME PerturbationStack COMMAND astroforces_test_perturbation_stack)
@@ -308,14 +295,12 @@ if(ASTROFORCES_BUILD_TESTS)
   target_link_libraries(astroforces_perf_benchmark PRIVATE
     astroforces_core
     astroforces_space_weather
-    astroforces_sc_props
     astroforces_models_basic
     astroforces_forces_core)
 
   add_executable(astroforces_test_third_body tests/test_third_body.cpp)
   target_link_libraries(astroforces_test_third_body PRIVATE
     astroforces_core
-    astroforces_sc_props
     astroforces_forces_core)
   target_compile_definitions(astroforces_test_third_body PRIVATE
     ASTROFORCES_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
@@ -324,7 +309,6 @@ if(ASTROFORCES_BUILD_TESTS)
   add_executable(astroforces_test_srp tests/test_srp.cpp)
   target_link_libraries(astroforces_test_srp PRIVATE
     astroforces_core
-    astroforces_sc_props
     astroforces_forces_core)
   target_compile_definitions(astroforces_test_srp PRIVATE
     ASTROFORCES_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
@@ -333,14 +317,12 @@ if(ASTROFORCES_BUILD_TESTS)
   add_executable(astroforces_test_earth_radiation tests/test_earth_radiation.cpp)
   target_link_libraries(astroforces_test_earth_radiation PRIVATE
     astroforces_core
-    astroforces_sc_props
     astroforces_forces_core)
   add_test(NAME EarthRadiation COMMAND astroforces_test_earth_radiation)
 
   add_executable(astroforces_test_antenna_thrust tests/test_antenna_thrust.cpp)
   target_link_libraries(astroforces_test_antenna_thrust PRIVATE
     astroforces_core
-    astroforces_sc_props
     astroforces_forces_core)
   add_test(NAME AntennaThrust COMMAND astroforces_test_antenna_thrust)
 
@@ -376,4 +358,9 @@ if(ASTROFORCES_BUILD_TESTS)
   target_link_libraries(astroforces_test_cip_reader PRIVATE
     astroforces_core)
   add_test(NAME CipReader COMMAND astroforces_test_cip_reader)
+
+  add_executable(astroforces_test_leap_seconds tests/test_leap_seconds.cpp)
+  target_link_libraries(astroforces_test_leap_seconds PRIVATE
+    astroforces_core)
+  add_test(NAME LeapSeconds COMMAND astroforces_test_leap_seconds)
 endif()

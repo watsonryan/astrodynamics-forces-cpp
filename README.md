@@ -95,6 +95,14 @@ Drag area modes:
 - Cannonball: set `use_surface_model=false`; area is fixed at `reference_area_m2`.
 - Macro-model: set `use_surface_model=true` with surfaces; projected area is computed from plate normals and flow direction in body frame.
 - Body-frame flow direction uses `StateVector::body_from_frame_dcm` (row-major DCM).
+- Drag frame transform modes:
+  - `ApproxGmst` (default): lightweight GMST-based frame conversion.
+  - `StrictGcrfItrf`: full GCRF/ITRF transform using EOP + CIP series.
+  - In strict mode, drag returns `Status::DataUnavailable` if required EOP/CIP samples are missing at epoch.
+
+Leap-second handling:
+- `astroforces::core::leap_seconds::active_table()` is deterministic and uses the built-in leap-second table.
+- Custom tables can be loaded explicitly with `load_table_from_file(...)` when a caller-managed source is needed.
 
 General perturbation interface:
 - Use `astroforces::forces::IPerturbationModel` for each force source.
