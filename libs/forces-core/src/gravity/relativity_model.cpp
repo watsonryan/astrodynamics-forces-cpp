@@ -64,6 +64,9 @@ RelativityResult RelativityAccelerationModel::evaluate(const astroforces::core::
   const auto& v = state.velocity_mps;
   const double r2 = astroforces::core::dot(r, r);
   const double rnorm = std::sqrt(r2);
+  const double inv_r = 1.0 / rnorm;
+  const double inv_r2 = inv_r * inv_r;
+  const double inv_r3 = inv_r2 * inv_r;
   const double v2 = astroforces::core::dot(v, v);
   const double rv = astroforces::core::dot(r, v);
   if (!(rnorm > 0.0) || !std::isfinite(rnorm) || !std::isfinite(v2) || !std::isfinite(rv)) {
@@ -74,8 +77,8 @@ RelativityResult RelativityAccelerationModel::evaluate(const astroforces::core::
   RelativityResult out{};
 
   if (config_.use_spherical_central_body) {
-    const double pref = config_.mu_earth_m3_s2 / (c2 * rnorm * rnorm * rnorm);
-    const double scale_r = 2.0 * (config_.ppn_beta + config_.ppn_gamma) * config_.mu_earth_m3_s2 / rnorm - config_.ppn_gamma * v2;
+    const double pref = config_.mu_earth_m3_s2 * inv_r3 / c2;
+    const double scale_r = 2.0 * (config_.ppn_beta + config_.ppn_gamma) * config_.mu_earth_m3_s2 * inv_r - config_.ppn_gamma * v2;
     const double scale_v = 2.0 * (1.0 + config_.ppn_gamma) * rv;
     out.spherical_central_body_mps2 = pref * (scale_r * r + scale_v * v);
   }
@@ -96,7 +99,8 @@ RelativityResult RelativityAccelerationModel::evaluate(const astroforces::core::
     if (!(R > 0.0)) {
       return RelativityResult{.status = astroforces::core::Status::NumericalError};
     }
-    const double pref = -(1.0 + 2.0 * config_.ppn_gamma) * config_.mu_sun_m3_s2 / (c2 * R * R * R);
+    const double inv_r_sun = 1.0 / R;
+    const double pref = -(1.0 + 2.0 * config_.ppn_gamma) * config_.mu_sun_m3_s2 * inv_r_sun * inv_r_sun * inv_r_sun / c2;
     out.geodesic_precession_mps2 = pref * astroforces::core::cross(astroforces::core::cross(V_es, R_es), v);
   }
 
@@ -104,11 +108,9 @@ RelativityResult RelativityAccelerationModel::evaluate(const astroforces::core::
     const astroforces::core::Vec3 omega_hat{
         config_.earth_spin_unit[0], config_.earth_spin_unit[1], config_.earth_spin_unit[2]};
     const astroforces::core::Vec3 J = config_.earth_angular_momentum_per_mass_m2_s * omega_hat;
-    const double pref = (1.0 + config_.ppn_gamma) * config_.lense_thirring_parameter * config_.mu_earth_m3_s2 /
-                        (c2 * rnorm * rnorm * rnorm);
-    out.lense_thirring_mps2 =
-        pref * ((3.0 * astroforces::core::dot(r, J) / r2) * astroforces::core::cross(r, v)
-                + astroforces::core::cross(v, J));
+    const double pref = (1.0 + config_.ppn_gamma) * config_.lense_thirring_parameter * config_.mu_earth_m3_s2 * inv_r3 / c2;
+    out.lense_thirring_mps2 = pref * ((3.0 * astroforces::core::dot(r, J) * inv_r2) * astroforces::core::cross(r, v)
+                                      + astroforces::core::cross(v, J));
   }
 
   if (config_.use_oblateness_j2) {
@@ -116,18 +118,17 @@ RelativityResult RelativityAccelerationModel::evaluate(const astroforces::core::
     const double y = r.y;
     const double z = r.z;
     const double vz = v.z;
-    const double r4 = r2 * r2;
-    const double z2_over_r2 = (z * z) / r2;
-    const double c = config_.mu_earth_m3_s2 * config_.earth_j2 * config_.earth_reference_radius_m * config_.earth_reference_radius_m /
-                     (c2 * r4);
-    const double term_a = 2.5 * v2 - 4.0 * config_.mu_earth_m3_s2 / rnorm;
-    const double term_b = 6.0 * rv / rnorm * vz;
-    const double mu_over_r = config_.mu_earth_m3_s2 / rnorm;
-    const double ax = c * x / rnorm *
+    const double z2_over_r2 = (z * z) * inv_r2;
+    const double c = config_.mu_earth_m3_s2 * config_.earth_j2 * config_.earth_reference_radius_m * config_.earth_reference_radius_m *
+                     inv_r2 * inv_r2 / c2;
+    const double term_a = 2.5 * v2 - 4.0 * config_.mu_earth_m3_s2 * inv_r;
+    const double term_b = 6.0 * rv * inv_r * vz;
+    const double mu_over_r = config_.mu_earth_m3_s2 * inv_r;
+    const double ax = c * x * inv_r *
                       (term_a * (1.0 - 5.0 * z2_over_r2) - term_b * (1.0 - 5.0 * z2_over_r2) + 2.0 * mu_over_r * z2_over_r2);
-    const double ay = c * y / rnorm *
+    const double ay = c * y * inv_r *
                       (term_a * (1.0 - 5.0 * z2_over_r2) - term_b * (1.0 - 5.0 * z2_over_r2) + 2.0 * mu_over_r * z2_over_r2);
-    const double az = c * z / rnorm *
+    const double az = c * z * inv_r *
                       (term_a * (3.0 - 5.0 * z2_over_r2) + term_b * (1.0 - 5.0 * z2_over_r2) + 2.0 * mu_over_r * (3.0 - z2_over_r2));
     out.oblateness_j2_mps2 = astroforces::core::Vec3{ax, ay, az};
   }
@@ -135,11 +136,11 @@ RelativityResult RelativityAccelerationModel::evaluate(const astroforces::core::
   if (config_.use_rotational_energy) {
     const astroforces::core::Vec3 omega_hat{
         config_.earth_spin_unit[0], config_.earth_spin_unit[1], config_.earth_spin_unit[2]};
-    const double z2_over_r2 = (r.z * r.z) / r2;
+    const double z2_over_r2 = (r.z * r.z) * inv_r2;
     const double pref = -(1.0 + config_.ppn_gamma) * config_.earth_rotational_energy_per_mass_m2_s2 * config_.mu_earth_m3_s2 *
-                        config_.earth_reference_radius_m * config_.earth_reference_radius_m /
-                        (4.0 * c2 * r2 * r2);
-    const astroforces::core::Vec3 term = (1.0 - 5.0 * z2_over_r2) * (r / rnorm) + 2.0 * astroforces::core::dot(r / rnorm, omega_hat) * omega_hat;
+                        config_.earth_reference_radius_m * config_.earth_reference_radius_m * inv_r2 * inv_r2 / (4.0 * c2);
+    const auto r_hat = r * inv_r;
+    const astroforces::core::Vec3 term = (1.0 - 5.0 * z2_over_r2) * r_hat + 2.0 * astroforces::core::dot(r_hat, omega_hat) * omega_hat;
     out.rotational_energy_mps2 = pref * term;
   }
 
