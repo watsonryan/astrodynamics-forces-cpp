@@ -5,10 +5,17 @@
  */
 
 #include <cmath>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <string>
 
 #include <spdlog/spdlog.h>
 
 #include "astroforces/core/transforms.hpp"
+#include "astroforces/core/eop.hpp"
+#include "astroforces/core/cip.hpp"
 #include "astroforces/forces/surface/drag/drag_model.hpp"
 #include "astroforces/models/exponential_atmosphere.hpp"
 #include "astroforces/sc/spacecraft.hpp"
@@ -22,6 +29,48 @@ bool approx(double a, double b, double rel) {
   return d / n <= rel;
 }
 
+std::filesystem::path make_fixed_column_eop_file() {
+  const auto path = std::filesystem::temp_directory_path() / "astroforces_drag_eop_test.txt";
+  std::ofstream out(path);
+
+  auto make_line = [](double mjd,
+                      double xp_arcsec,
+                      double yp_arcsec,
+                      double dut1_s,
+                      double lod_ms,
+                      double dX_mas,
+                      double dY_mas) {
+    std::string line(140, ' ');
+    auto put_num = [&](const int start, const int width, const double value, const int prec) {
+      std::ostringstream oss;
+      oss << std::fixed << std::setw(width) << std::setprecision(prec) << value;
+      const std::string s = oss.str();
+      line.replace(static_cast<std::size_t>(start), static_cast<std::size_t>(width), s);
+    };
+    put_num(7, 8, mjd, 2);
+    put_num(18, 9, xp_arcsec, 6);
+    put_num(37, 9, yp_arcsec, 6);
+    put_num(58, 10, dut1_s, 7);
+    put_num(79, 7, lod_ms, 3);
+    put_num(97, 9, dX_mas, 6);
+    put_num(116, 9, dY_mas, 6);
+    return line;
+  };
+
+  out << make_line(60676.0, 0.123456, -0.234567, 0.1000000, 0.900, 0.345678, -0.456789) << "\n";
+  out << make_line(60677.0, 0.223456, -0.134567, 0.1200000, 1.100, 0.445678, -0.356789) << "\n";
+  return path;
+}
+
+std::filesystem::path make_cip_file() {
+  const auto path = std::filesystem::temp_directory_path() / "astroforces_drag_cip_test.txt";
+  std::ofstream out(path);
+  out << "# MJD_UTC X Y s (arcsec)\n";
+  out << "60676.0 0.100 -0.200 0.010\n";
+  out << "60677.0 0.120 -0.220 0.015\n";
+  return path;
+}
+
 }  // namespace
 
 int main() {
@@ -32,7 +81,10 @@ int main() {
   models::ZeroWindModel wind;
   forces::DragAccelerationModel model(weather, atmosphere, wind);
 
+  const double epoch_utc_s = (60676.5 + 2400000.5 - 2440587.5) * core::constants::kSecondsPerDay;
+
   core::StateVector state{};
+  state.epoch.utc_seconds = epoch_utc_s;
   state.frame = core::Frame::ECEF;
   state.position_m = core::Vec3{6378137.0, 0.0, 0.0};
   state.velocity_mps = core::Vec3{7500.0, 0.0, 0.0};
@@ -69,6 +121,33 @@ int main() {
   if (out_eci.status != core::Status::Ok || !std::isfinite(out_eci.relative_speed_mps)) {
     spdlog::error("eci drag evaluation failed");
     return 9;
+  }
+
+  const auto eop_path = make_fixed_column_eop_file();
+  const auto cip_path = make_cip_file();
+  const auto eop_series = core::eop::Series::load_iers_finals(eop_path);
+  const auto cip_series = core::cip::Series::load_table(cip_path, core::cip::AngleUnit::Arcseconds, false);
+  std::error_code ec;
+  std::filesystem::remove(eop_path, ec);
+  std::filesystem::remove(cip_path, ec);
+
+  if (eop_series.empty() || cip_series.empty()) {
+    spdlog::error("failed to load strict transform support data");
+    return 10;
+  }
+
+  forces::DragAccelerationModel strict_model(
+      weather,
+      atmosphere,
+      wind,
+      forces::DragFrameTransformMode::StrictGcrfItrf,
+      &eop_series,
+      &cip_series);
+
+  const auto out_eci_strict = strict_model.evaluate(state_eci, sc);
+  if (out_eci_strict.status != core::Status::Ok || !std::isfinite(out_eci_strict.relative_speed_mps)) {
+    spdlog::error("strict eci drag evaluation failed");
+    return 11;
   }
 
   sc::SpacecraftProperties macro_sc{

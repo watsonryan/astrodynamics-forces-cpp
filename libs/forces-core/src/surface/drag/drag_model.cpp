@@ -38,19 +38,120 @@ DragResult DragAccelerationModel::evaluate(const astroforces::core::StateVector&
   if (w.status != astroforces::core::Status::Ok) {
     return DragResult{.status = w.status};
   }
-  std::optional<astroforces::core::ApproxEciEcefContext> frame_ctx{};
-  const auto& get_frame_ctx = [&]() -> const astroforces::core::ApproxEciEcefContext& {
-    if (!frame_ctx.has_value()) {
-      frame_ctx = astroforces::core::build_approx_eci_ecef_context(state.epoch.utc_seconds);
+
+  std::optional<astroforces::core::ApproxEciEcefContext> approx_ctx{};
+  const auto& get_approx_ctx = [&]() -> const astroforces::core::ApproxEciEcefContext& {
+    if (!approx_ctx.has_value()) {
+      approx_ctx = astroforces::core::build_approx_eci_ecef_context(state.epoch.utc_seconds);
     }
-    return *frame_ctx;
+    return *approx_ctx;
+  };
+
+  std::optional<astroforces::core::GcrfItrfTransformContext> strict_ctx{};
+  const auto get_strict_ctx = [&]() -> const astroforces::core::GcrfItrfTransformContext* {
+    if (transform_mode_ != DragFrameTransformMode::StrictGcrfItrf) {
+      return nullptr;
+    }
+    if (strict_ctx.has_value()) {
+      return &(*strict_ctx);
+    }
+    if (eop_series_ == nullptr || cip_series_ == nullptr) {
+      return nullptr;
+    }
+    const auto eop_sample = eop_series_->sample_at_utc_seconds(state.epoch.utc_seconds);
+    const auto cip_sample = cip_series_->sample_at_utc_seconds(state.epoch.utc_seconds);
+    if (!eop_sample.has_value() || !cip_sample.has_value()) {
+      return nullptr;
+    }
+    const double jd_utc = astroforces::core::utc_seconds_to_julian_date_utc(state.epoch.utc_seconds);
+    const double jd_tt = astroforces::core::utc_seconds_to_julian_date_tt(state.epoch.utc_seconds);
+    strict_ctx = astroforces::core::gcrf_to_itrf_transform_context_exact(
+        jd_utc,
+        jd_tt,
+        cip_sample->value,
+        cip_sample->rate,
+        eop_sample->value,
+        eop_sample->rate);
+    return &(*strict_ctx);
+  };
+
+  const auto eci_pos_to_ecef = [&](const astroforces::core::Vec3& r_eci_m, astroforces::core::Vec3* out) -> bool {
+    if (out == nullptr) {
+      return false;
+    }
+    if (transform_mode_ == DragFrameTransformMode::StrictGcrfItrf) {
+      const auto* ctx = get_strict_ctx();
+      if (ctx == nullptr) {
+        return false;
+      }
+      *out = astroforces::core::gcrf_to_itrf_position(r_eci_m, *ctx);
+      return true;
+    }
+    *out = astroforces::core::approx_eci_to_ecef_position(r_eci_m, get_approx_ctx());
+    return true;
+  };
+
+  const auto eci_vel_to_ecef = [&](const astroforces::core::Vec3& r_eci_m,
+                                   const astroforces::core::Vec3& v_eci_mps,
+                                   astroforces::core::Vec3* out) -> bool {
+    if (out == nullptr) {
+      return false;
+    }
+    if (transform_mode_ == DragFrameTransformMode::StrictGcrfItrf) {
+      const auto* ctx = get_strict_ctx();
+      if (ctx == nullptr) {
+        return false;
+      }
+      *out = astroforces::core::gcrf_to_itrf_velocity(r_eci_m, v_eci_mps, *ctx);
+      return true;
+    }
+    *out = astroforces::core::approx_eci_to_ecef_velocity(r_eci_m, v_eci_mps, get_approx_ctx());
+    return true;
+  };
+
+  const auto ecef_pos_to_eci = [&](const astroforces::core::Vec3& r_ecef_m, astroforces::core::Vec3* out) -> bool {
+    if (out == nullptr) {
+      return false;
+    }
+    if (transform_mode_ == DragFrameTransformMode::StrictGcrfItrf) {
+      const auto* ctx = get_strict_ctx();
+      if (ctx == nullptr) {
+        return false;
+      }
+      *out = astroforces::core::itrf_to_gcrf_position(r_ecef_m, *ctx);
+      return true;
+    }
+    *out = astroforces::core::approx_ecef_to_eci_position(r_ecef_m, get_approx_ctx());
+    return true;
+  };
+
+  const auto ecef_vel_to_eci = [&](const astroforces::core::Vec3& r_ecef_m,
+                                   const astroforces::core::Vec3& v_ecef_mps,
+                                   astroforces::core::Vec3* out) -> bool {
+    if (out == nullptr) {
+      return false;
+    }
+    if (transform_mode_ == DragFrameTransformMode::StrictGcrfItrf) {
+      const auto* ctx = get_strict_ctx();
+      if (ctx == nullptr) {
+        return false;
+      }
+      *out = astroforces::core::itrf_to_gcrf_velocity(r_ecef_m, v_ecef_mps, *ctx);
+      return true;
+    }
+    *out = astroforces::core::approx_ecef_to_eci_velocity(r_ecef_m, v_ecef_mps, get_approx_ctx());
+    return true;
   };
 
   astroforces::core::StateVector eval_state = state;
   if (state.frame == astroforces::core::Frame::ECI) {
     eval_state.frame = astroforces::core::Frame::ECEF;
-    eval_state.position_m = astroforces::core::approx_eci_to_ecef_position(state.position_m, get_frame_ctx());
-    eval_state.velocity_mps = astroforces::core::approx_eci_to_ecef_velocity(state.position_m, state.velocity_mps, get_frame_ctx());
+    if (!eci_pos_to_ecef(state.position_m, &eval_state.position_m)) {
+      return DragResult{.status = astroforces::core::Status::DataUnavailable};
+    }
+    if (!eci_vel_to_ecef(state.position_m, state.velocity_mps, &eval_state.velocity_mps)) {
+      return DragResult{.status = astroforces::core::Status::DataUnavailable};
+    }
   }
 
   const auto a = atmosphere_.evaluate(eval_state, w);
@@ -68,8 +169,13 @@ DragResult DragAccelerationModel::evaluate(const astroforces::core::StateVector&
     if (wind.frame == astroforces::core::Frame::ECEF) {
       wind_state_mps = wind.velocity_mps;
     } else if (wind.frame == astroforces::core::Frame::ECI) {
-      const auto r_eci = astroforces::core::approx_ecef_to_eci_position(eval_state.position_m, get_frame_ctx());
-      wind_state_mps = astroforces::core::approx_eci_to_ecef_velocity(r_eci, wind.velocity_mps, get_frame_ctx());
+      astroforces::core::Vec3 r_eci{};
+      if (!ecef_pos_to_eci(eval_state.position_m, &r_eci)) {
+        return DragResult{.status = astroforces::core::Status::DataUnavailable};
+      }
+      if (!eci_vel_to_ecef(r_eci, wind.velocity_mps, &wind_state_mps)) {
+        return DragResult{.status = astroforces::core::Status::DataUnavailable};
+      }
     } else {
       return DragResult{.status = astroforces::core::Status::InvalidInput};
     }
@@ -77,7 +183,9 @@ DragResult DragAccelerationModel::evaluate(const astroforces::core::StateVector&
     if (wind.frame == astroforces::core::Frame::ECI) {
       wind_state_mps = wind.velocity_mps;
     } else if (wind.frame == astroforces::core::Frame::ECEF) {
-      wind_state_mps = astroforces::core::approx_ecef_to_eci_velocity(eval_state.position_m, wind.velocity_mps, get_frame_ctx());
+      if (!ecef_vel_to_eci(eval_state.position_m, wind.velocity_mps, &wind_state_mps)) {
+        return DragResult{.status = astroforces::core::Status::DataUnavailable};
+      }
     } else {
       return DragResult{.status = astroforces::core::Status::InvalidInput};
     }
