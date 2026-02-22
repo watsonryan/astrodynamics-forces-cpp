@@ -560,7 +560,7 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
   const bool need_itrf_gcrf_transform
       = (state.frame == astroforces::core::Frame::ECI)
         || (config_.use_solid_earth_tides && (config_.use_sun_tide || config_.use_moon_tide));
-  astroforces::core::RotationWithDerivative strict_rd{};
+  astroforces::core::GcrfItrfTransformContext strict_ctx{};
   if (need_itrf_gcrf_transform) {
     if (!eop_ || !cip_) {
       return GravitySphResult{.status = astroforces::core::Status::DataUnavailable};
@@ -570,7 +570,7 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
     if (!eop_now.has_value() || !cip_now.has_value()) {
       return GravitySphResult{.status = astroforces::core::Status::DataUnavailable};
     }
-    strict_rd = astroforces::core::gcrf_to_itrf_rotation_with_derivative_exact(
+    strict_ctx = astroforces::core::gcrf_to_itrf_transform_context_exact(
         jd_utc, jd_tt, cip_now->value, cip_now->rate, eop_now->value, eop_now->rate);
   }
 
@@ -579,17 +579,17 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
 
   astroforces::core::Vec3 r_ecef = state.position_m;
   if (state.frame == astroforces::core::Frame::ECI) {
-    r_ecef = astroforces::core::mat_vec(strict_rd.r, state.position_m);
+    r_ecef = astroforces::core::gcrf_to_itrf_position(state.position_m, strict_ctx);
   }
   const auto gcrf_to_itrf_vec = [&](const astroforces::core::Vec3& v) -> astroforces::core::Vec3 {
     if (need_itrf_gcrf_transform) {
-      return astroforces::core::mat_vec(strict_rd.r, v);
+      return astroforces::core::gcrf_to_itrf_position(v, strict_ctx);
     }
     return v;
   };
   const auto itrf_to_gcrf_vec = [&](const astroforces::core::Vec3& v) -> astroforces::core::Vec3 {
     if (need_itrf_gcrf_transform) {
-      return astroforces::core::mat_vec(astroforces::core::mat_transpose(strict_rd.r), v);
+      return astroforces::core::itrf_to_gcrf_position(v, strict_ctx);
     }
     return v;
   };
