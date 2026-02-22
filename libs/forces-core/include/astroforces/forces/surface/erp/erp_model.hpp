@@ -25,6 +25,7 @@ struct ErpResult {
   double albedo_pressure_pa{};
   double ir_pressure_pa{};
   double albedo_phase_function{};
+  double albedo_eclipse_factor{1.0};
   double earth_distance_m{};
   double area_m2{};
   double cr{};
@@ -42,6 +43,7 @@ class ErpAccelerationModel final {
     double speed_of_light_mps{astroforces::core::constants::kSpeedOfLightMps};
     bool use_albedo{true};
     bool use_earth_ir{true};
+    bool use_eclipse{true};
   };
 
   static std::unique_ptr<ErpAccelerationModel> Create(const Config& config);

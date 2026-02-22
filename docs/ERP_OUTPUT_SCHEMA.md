@@ -11,6 +11,7 @@ Output fields:
   - `p_albedo_pa`
   - `p_ir_pa`
   - `albedo_phase`
+  - `albedo_eclipse_factor`
   - `r_earth_m`, `area`, `cr`
 
 ## Batch CLI
@@ -23,6 +24,6 @@ Input row format:
 Output CSV columns:
 - `epoch_utc_s`
 - `ax_mps2`, `ay_mps2`, `az_mps2`, `amag_mps2`
-- `earth_radiation_pressure_pa` (total), `albedo_pressure_pa`, `ir_pressure_pa`, `albedo_phase_function`, `earth_distance_m`
+- `earth_radiation_pressure_pa` (total), `albedo_pressure_pa`, `ir_pressure_pa`, `albedo_phase_function`, `albedo_eclipse_factor`, `earth_distance_m`
 - `area_m2`, `cr`
 - `status` (`astroforces::core::Status` enum value as integer)

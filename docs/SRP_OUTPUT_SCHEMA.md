@@ -6,7 +6,7 @@ Command:
 
 Output fields:
 - Acceleration: `ax`, `ay`, `az`, `amag`
-- Diagnostics: `p_pa`, `r_sun_m`, `area`, `cr`, `eclipsed`
+- Diagnostics: `p_pa`, `eclipse_factor`, `r_sun_m`, `area`, `cr`, `eclipsed`
 
 ## Batch CLI
 Command:
@@ -18,7 +18,6 @@ Input row format:
 Output CSV columns:
 - `epoch_utc_s`
 - `ax_mps2`, `ay_mps2`, `az_mps2`, `amag_mps2`
-- `solar_pressure_pa`, `sun_distance_m`
+- `solar_pressure_pa`, `eclipse_factor`, `sun_distance_m`
 - `area_m2`, `cr`, `eclipsed`
 - `status` (`astroforces::core::Status` enum value as integer)
-

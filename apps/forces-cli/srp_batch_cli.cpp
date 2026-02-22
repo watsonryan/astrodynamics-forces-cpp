@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
   auto srp = astroforces::forces::SrpAccelerationModel::Create(
       {.ephemeris_file = eph_file, .use_eclipse = use_eclipse});
 
-  out << "epoch_utc_s,ax_mps2,ay_mps2,az_mps2,amag_mps2,solar_pressure_pa,sun_distance_m,area_m2,cr,eclipsed,status\n";
+  out << "epoch_utc_s,ax_mps2,ay_mps2,az_mps2,amag_mps2,solar_pressure_pa,eclipse_factor,sun_distance_m,area_m2,cr,eclipsed,status\n";
 
   std::string line;
   std::size_t line_no = 0;
@@ -115,13 +115,12 @@ int main(int argc, char** argv) {
     state.frame = astroforces::core::Frame::ECI;
 
     const auto r = srp->evaluate(state, sc);
-    out << fmt::format("{:.6f},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{},{}\n",
+    out << fmt::format("{:.6f},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{},{}\n",
                        row.epoch_utc_s, r.acceleration_mps2.x, r.acceleration_mps2.y, r.acceleration_mps2.z,
-                       magnitude(r.acceleration_mps2), r.solar_pressure_pa, r.sun_distance_m, r.area_m2, r.cr,
+                       magnitude(r.acceleration_mps2), r.solar_pressure_pa, r.eclipse_factor, r.sun_distance_m, r.area_m2, r.cr,
                        r.eclipsed ? 1 : 0, static_cast<int>(r.status));
   }
 
   spdlog::info("wrote srp batch output: {}", output_csv.string());
   return 0;
 }
-

@@ -9,6 +9,8 @@ namespace astroforces::core::constants {
 
 inline constexpr double kEarthRadiusWgs84M = 6378137.0;
 inline constexpr double kEarthEquatorialRadiusM = 6378136.3;
+inline constexpr double kSunRadiusM = 6.9634e8;
+inline constexpr double kMoonRadiusM = 1.7374e6;
 inline constexpr double kEarthMuM3S2 = 3.986004418e14;
 inline constexpr double kEarthJ2 = 1.08262668e-3;
 inline constexpr double kSunMuM3S2 = 1.32712440018e20;

@@ -55,8 +55,7 @@ int main(int argc, char** argv) {
 
   fmt::print("ax={} ay={} az={} amag={}\n", out.acceleration_mps2.x, out.acceleration_mps2.y, out.acceleration_mps2.z,
              magnitude(out.acceleration_mps2));
-  fmt::print("p_pa={} r_sun_m={} area={} cr={} eclipsed={}\n", out.solar_pressure_pa, out.sun_distance_m, out.area_m2, out.cr,
-             out.eclipsed ? 1 : 0);
+  fmt::print("p_pa={} eclipse_factor={} r_sun_m={} area={} cr={} eclipsed={}\n", out.solar_pressure_pa, out.eclipse_factor,
+             out.sun_distance_m, out.area_m2, out.cr, out.eclipsed ? 1 : 0);
   return 0;
 }
-

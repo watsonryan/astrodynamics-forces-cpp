@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
   }
 
   out << "epoch_utc_s,ax_mps2,ay_mps2,az_mps2,amag_mps2,earth_radiation_pressure_pa,albedo_pressure_pa,ir_pressure_pa,"
-         "albedo_phase_function,earth_distance_m,area_m2,cr,status\n";
+         "albedo_phase_function,albedo_eclipse_factor,earth_distance_m,area_m2,cr,status\n";
 
   std::string line;
   std::size_t line_no = 0;
@@ -113,10 +113,11 @@ int main(int argc, char** argv) {
     state.frame = astroforces::core::Frame::ECI;
 
     const auto r = erp->evaluate(state, sc);
-    out << fmt::format("{:.6f},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{}\n",
+    out << fmt::format("{:.6f},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{:.12e},{}\n",
                        row.epoch_utc_s, r.acceleration_mps2.x, r.acceleration_mps2.y, r.acceleration_mps2.z,
                        magnitude(r.acceleration_mps2), r.earth_radiation_pressure_pa, r.albedo_pressure_pa, r.ir_pressure_pa,
-                       r.albedo_phase_function, r.earth_distance_m, r.area_m2, r.cr, static_cast<int>(r.status));
+                       r.albedo_phase_function, r.albedo_eclipse_factor, r.earth_distance_m, r.area_m2, r.cr,
+                       static_cast<int>(r.status));
   }
 
   spdlog::info("wrote erp batch output: {}", output_csv.string());

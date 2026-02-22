@@ -57,12 +57,24 @@ int main() {
     spdlog::error("srp scalar outputs invalid");
     return 3;
   }
+  if (std::abs(out.eclipse_factor - 1.0) > 1e-12) {
+    spdlog::error("srp no-eclipse factor should be 1, got {}", out.eclipse_factor);
+    return 5;
+  }
 
   const auto srp_e = astroforces::forces::SrpAccelerationModel::Create({.ephemeris_file = eph_path, .use_eclipse = true});
   const auto out_e = srp_e->evaluate(state, sc);
   if (out_e.status != astroforces::core::Status::Ok) {
     spdlog::error("srp eclipse evaluate failed");
     return 4;
+  }
+  if (!(out_e.eclipse_factor >= 0.0 && out_e.eclipse_factor <= 1.0)) {
+    spdlog::error("srp eclipse factor out of bounds: {}", out_e.eclipse_factor);
+    return 6;
+  }
+  if (out_e.solar_pressure_pa - out.solar_pressure_pa > 1e-16) {
+    spdlog::error("srp eclipse pressure should not exceed no-eclipse case");
+    return 7;
   }
 
   return 0;

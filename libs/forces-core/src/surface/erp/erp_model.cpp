@@ -14,6 +14,7 @@
 #include <Eigen/Dense>
 
 #include "astroforces/atmo/conversions.hpp"
+#include "astroforces/forces/surface/eclipse.hpp"
 #include "astroforces/forces/surface/surface_force.hpp"
 #include "jpl_eph/jpl_eph.hpp"
 
@@ -86,6 +87,7 @@ ErpResult ErpAccelerationModel::evaluate(const astroforces::core::StateVector& s
   const double distance_scale = ratio * ratio;
 
   double albedo_phase = 1.0;
+  double albedo_eclipse_factor = 1.0;
   if (config_.use_albedo && ephemeris_ && workspace_ && state.frame == astroforces::core::Frame::ECI) {
     const double jd_utc = astroforces::core::utc_seconds_to_julian_date_utc(state.epoch.utc_seconds);
     const auto sun = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Sun, jpl::eph::Body::Earth, false, *workspace_);
@@ -101,11 +103,22 @@ ErpResult ErpAccelerationModel::evaluate(const astroforces::core::StateVector& s
       const double phase = std::acos(cos_phase);
       albedo_phase = lambert_phase_function(phase);
     }
+    if (config_.use_eclipse) {
+      const auto moon = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Moon, jpl::eph::Body::Earth, false, *workspace_);
+      astroforces::core::Vec3 r_moon{};
+      astroforces::core::Vec3* moon_ptr = nullptr;
+      if (moon.has_value()) {
+        r_moon = to_vec3(moon.value().pv);
+        moon_ptr = &r_moon;
+      }
+      albedo_eclipse_factor = astroforces::forces::sun_visibility_factor(state.position_m, r_sun, moon_ptr);
+    }
   }
 
   const double p_albedo = config_.use_albedo
                               ? (config_.earth_albedo * config_.solar_flux_w_m2 * distance_scale * albedo_phase /
-                                 config_.speed_of_light_mps)
+                                 config_.speed_of_light_mps) *
+                                    albedo_eclipse_factor
                               : 0.0;
   const double p_ir = config_.use_earth_ir
                           ? (config_.earth_ir_flux_w_m2 * distance_scale / config_.speed_of_light_mps)
@@ -140,6 +153,7 @@ ErpResult ErpAccelerationModel::evaluate(const astroforces::core::StateVector& s
       .albedo_pressure_pa = p_albedo,
       .ir_pressure_pa = p_ir,
       .albedo_phase_function = albedo_phase,
+      .albedo_eclipse_factor = albedo_eclipse_factor,
       .earth_distance_m = earth_dist_m,
       .area_m2 = sf.area_m2,
       .cr = sf.coeff,

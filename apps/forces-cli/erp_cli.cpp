@@ -54,8 +54,8 @@ int main(int argc, char** argv) {
 
   fmt::print("ax={} ay={} az={} amag={}\n", out.acceleration_mps2.x, out.acceleration_mps2.y, out.acceleration_mps2.z,
              magnitude(out.acceleration_mps2));
-  fmt::print("p_total_pa={} p_albedo_pa={} p_ir_pa={} albedo_phase={} r_earth_m={} area={} cr={}\n",
+  fmt::print("p_total_pa={} p_albedo_pa={} p_ir_pa={} albedo_phase={} albedo_eclipse_factor={} r_earth_m={} area={} cr={}\n",
              out.earth_radiation_pressure_pa, out.albedo_pressure_pa, out.ir_pressure_pa, out.albedo_phase_function,
-             out.earth_distance_m, out.area_m2, out.cr);
+             out.albedo_eclipse_factor, out.earth_distance_m, out.area_m2, out.cr);
   return 0;
 }

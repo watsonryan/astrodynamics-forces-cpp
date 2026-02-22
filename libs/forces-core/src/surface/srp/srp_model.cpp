@@ -12,6 +12,7 @@
 #include <Eigen/Dense>
 
 #include "astroforces/atmo/conversions.hpp"
+#include "astroforces/forces/surface/eclipse.hpp"
 #include "astroforces/forces/surface/surface_force.hpp"
 #include "jpl_eph/jpl_eph.hpp"
 
@@ -35,21 +36,6 @@ astroforces::core::Status map_jpl_error(const jpl::eph::Status& s) {
     default:
       return astroforces::core::Status::NumericalError;
   }
-}
-
-bool in_cylindrical_umbra(const astroforces::core::Vec3& r_sc_eci_m,
-                          const astroforces::core::Vec3& r_sun_eci_m) {
-  const double r_sun = astroforces::core::norm(r_sun_eci_m);
-  if (!(r_sun > 0.0)) {
-    return false;
-  }
-  const auto s_hat = r_sun_eci_m / r_sun;  // Earth->Sun direction.
-  const double proj = astroforces::core::dot(r_sc_eci_m, s_hat);
-  if (proj >= 0.0) {
-    return false;
-  }
-  const auto perp = r_sc_eci_m - proj * s_hat;
-  return astroforces::core::norm(perp) < astroforces::core::constants::kEarthRadiusWgs84M;
 }
 
 }  // namespace
@@ -87,9 +73,21 @@ SrpResult SrpAccelerationModel::evaluate(const astroforces::core::StateVector& s
     return SrpResult{.status = astroforces::core::Status::NumericalError};
   }
 
-  const bool eclipsed = config_.use_eclipse && in_cylindrical_umbra(state.position_m, r_sun_eci_m);
+  astroforces::core::Vec3 r_moon_eci_m{};
+  bool has_moon = false;
+  if (config_.use_eclipse) {
+    const auto moon = ephemeris_->PlephSi(jd_utc, jpl::eph::Body::Moon, jpl::eph::Body::Earth, false, *workspace_);
+    if (moon.has_value()) {
+      r_moon_eci_m = to_vec3(moon.value().pv);
+      has_moon = true;
+    }
+  }
+  const double eclipse_factor =
+      config_.use_eclipse ? astroforces::forces::sun_visibility_factor(state.position_m, r_sun_eci_m, has_moon ? &r_moon_eci_m : nullptr)
+                          : 1.0;
+  const bool eclipsed = eclipse_factor <= 0.0;
   const double inv_r2 = (config_.astronomical_unit_m / sun_dist_m) * (config_.astronomical_unit_m / sun_dist_m);
-  const double pressure = eclipsed ? 0.0 : (config_.solar_pressure_1au_pa * inv_r2);
+  const double pressure = config_.solar_pressure_1au_pa * inv_r2 * eclipse_factor;
 
   astroforces::core::Vec3 flow_dir_body{};
   {
@@ -114,6 +112,7 @@ SrpResult SrpAccelerationModel::evaluate(const astroforces::core::StateVector& s
       .acceleration_mps2 = sf.acceleration_mps2,
       .solar_pressure_pa = pressure,
       .sun_distance_m = sun_dist_m,
+      .eclipse_factor = eclipse_factor,
       .area_m2 = sf.area_m2,
       .cr = sf.coeff,
       .eclipsed = eclipsed,
@@ -122,4 +121,3 @@ SrpResult SrpAccelerationModel::evaluate(const astroforces::core::StateVector& s
 }
 
 }  // namespace astroforces::forces
-

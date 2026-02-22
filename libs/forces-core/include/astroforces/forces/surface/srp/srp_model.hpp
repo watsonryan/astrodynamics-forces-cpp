@@ -23,6 +23,7 @@ struct SrpResult {
   astroforces::core::Vec3 acceleration_mps2{};
   double solar_pressure_pa{};
   double sun_distance_m{};
+  double eclipse_factor{1.0};
   double area_m2{};
   double cr{};
   bool eclipsed{};
@@ -52,4 +53,3 @@ class SrpAccelerationModel final {
 };
 
 }  // namespace astroforces::forces
-

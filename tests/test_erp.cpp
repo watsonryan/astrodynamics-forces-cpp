@@ -51,6 +51,10 @@ int main() {
     spdlog::error("erp albedo phase is out of bounds: {}", near_out.albedo_phase_function);
     return 8;
   }
+  if (!(near_out.albedo_eclipse_factor >= 0.0 && near_out.albedo_eclipse_factor <= 1.0)) {
+    spdlog::error("erp albedo eclipse factor is out of bounds: {}", near_out.albedo_eclipse_factor);
+    return 10;
+  }
 
   auto far_state = near_state;
   far_state.position_m = 2.0 * near_state.position_m;
