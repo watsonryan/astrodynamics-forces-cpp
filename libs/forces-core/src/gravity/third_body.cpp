@@ -38,28 +38,30 @@ astroforces::core::Vec3 third_body_direct_indirect(const astroforces::core::Vec3
                                                const astroforces::core::Vec3& r_tb_m,
                                                double mu_m3_s2) {
   const astroforces::core::Vec3 rho = r_tb_m - r_sc_m;
-  const double rho_norm = astroforces::core::norm(rho);
-  const double rtb_norm = astroforces::core::norm(r_tb_m);
-  if (rho_norm <= 0.0 || rtb_norm <= 0.0) {
+  const double rho2 = astroforces::core::dot(rho, rho);
+  const double rtb2 = astroforces::core::dot(r_tb_m, r_tb_m);
+  if (!(rho2 > 0.0) || !(rtb2 > 0.0)) {
     return astroforces::core::Vec3{};
   }
-  const double rho3 = rho_norm * rho_norm * rho_norm;
-  const double rtb3 = rtb_norm * rtb_norm * rtb_norm;
-  return (mu_m3_s2 / rho3) * rho - (mu_m3_s2 / rtb3) * r_tb_m;
+  const double inv_rho = 1.0 / std::sqrt(rho2);
+  const double inv_rtb = 1.0 / std::sqrt(rtb2);
+  const double inv_rho3 = inv_rho * inv_rho * inv_rho;
+  const double inv_rtb3 = inv_rtb * inv_rtb * inv_rtb;
+  return (mu_m3_s2 * inv_rho3) * rho - (mu_m3_s2 * inv_rtb3) * r_tb_m;
 }
 
 astroforces::core::Vec3 goce_eq79_indirect_j2(const astroforces::core::Vec3& r_tb_m, double mu_m3_s2) {
   const double r2 = astroforces::core::dot(r_tb_m, r_tb_m);
-  if (r2 <= 0.0) {
+  if (!(r2 > 0.0)) {
     return astroforces::core::Vec3{};
   }
-  const double r = std::sqrt(r2);
-  const double r5 = r2 * r2 * r;
+  const double inv_r = 1.0 / std::sqrt(r2);
+  const double inv_r5 = inv_r * inv_r * inv_r * inv_r * inv_r;
   const double z2_over_r2 = (r_tb_m.z * r_tb_m.z) / r2;
   const double common_xy = 1.0 - 5.0 * z2_over_r2;
   const double common_z = 3.0 - 5.0 * z2_over_r2;
   const double ae2 = astroforces::core::constants::kEarthEquatorialRadiusM * astroforces::core::constants::kEarthEquatorialRadiusM;
-  const double coeff = -mu_m3_s2 * astroforces::core::constants::kEarthC20FullyNormalized * ae2 / r5;
+  const double coeff = -mu_m3_s2 * astroforces::core::constants::kEarthC20FullyNormalized * ae2 * inv_r5;
   return astroforces::core::Vec3{
       coeff * r_tb_m.x * common_xy,
       coeff * r_tb_m.y * common_xy,
