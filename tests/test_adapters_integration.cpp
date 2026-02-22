@@ -37,9 +37,9 @@ int main() {
   using namespace astroforces;
   namespace fs = std::filesystem;
 
-  const auto nrl_parm = fs::path(DRAGCPP_NRLMSIS21_SOURCE_DIR) / "data" / "msis21.parm";
-  const auto dtm_coeff = fs::path(DRAGCPP_DTM2020_SOURCE_DIR) / "testdata" / "operational_regression_coeff.dat";
-  const auto hwm_data_dir = fs::path(DRAGCPP_HWM14_SOURCE_DIR) / "testdata";
+  const auto nrl_parm = fs::path(ASTROFORCES_NRLMSIS21_SOURCE_DIR) / "data" / "msis21.parm";
+  const auto dtm_coeff = fs::path(ASTROFORCES_DTM2020_SOURCE_DIR) / "testdata" / "operational_regression_coeff.dat";
+  const auto hwm_data_dir = fs::path(ASTROFORCES_HWM14_SOURCE_DIR) / "testdata";
 
   if (!fs::exists(nrl_parm) || !fs::exists(dtm_coeff) || !fs::exists(hwm_data_dir)) {
     spdlog::error("adapter test data paths missing");

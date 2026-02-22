@@ -48,10 +48,10 @@ int main() {
   const auto gravity_file = write_test_gfc();
 
   fs::path eph_path;
-  if (const char* env = std::getenv("DRAGCPP_JPL_EPH_FILE")) {
+  if (const char* env = std::getenv("ASTROFORCES_JPL_EPH_FILE")) {
     eph_path = env;
   } else {
-    eph_path = fs::path(DRAGCPP_JPL_EPH_SOURCE_DIR) / "testdata" / "linux_p1550p2650.440";
+    eph_path = fs::path(ASTROFORCES_JPL_EPH_SOURCE_DIR) / "testdata" / "linux_p1550p2650.440";
   }
 
   astroforces::core::StateVector state{};

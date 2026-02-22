@@ -35,7 +35,7 @@ bool write_csv(const std::filesystem::path& p) {
 
 int main() {
   namespace fs = std::filesystem;
-  const auto csv = fs::temp_directory_path() / "dragcpp_celestrak_test.csv";
+  const auto csv = fs::temp_directory_path() / "astroforces_celestrak_test.csv";
   if (!write_csv(csv)) {
     spdlog::error("failed to write csv");
     return 10;

@@ -2,14 +2,6 @@
 cmake_minimum_required(VERSION 3.25)
 project(astrodynamics_forces_cpp VERSION 0.1.0 LANGUAGES CXX)
 
-# Legacy option compatibility.
-if(DEFINED DRAGCPP_BUILD_TESTS AND NOT DEFINED ASTROFORCES_BUILD_TESTS)
-  set(ASTROFORCES_BUILD_TESTS "${DRAGCPP_BUILD_TESTS}")
-endif()
-if(DEFINED DRAGCPP_WARNINGS_AS_ERRORS AND NOT DEFINED ASTROFORCES_WARNINGS_AS_ERRORS)
-  set(ASTROFORCES_WARNINGS_AS_ERRORS "${DRAGCPP_WARNINGS_AS_ERRORS}")
-endif()
-
 option(ASTROFORCES_BUILD_TESTS "Build tests" ON)
 option(ASTROFORCES_WARNINGS_AS_ERRORS "Treat warnings as errors" ON)
 
@@ -19,22 +11,6 @@ set(ASTROFORCES_HWM14_REPO "https://github.com/watsonryan/hwm14.git" CACHE STRIN
 set(ASTROFORCES_JPL_EPH_REPO "https://github.com/watsonryan/jplEphem.git" CACHE STRING "jplEphem repo")
 set(ASTROFORCES_EXTERNAL_MODELS_TAG "main" CACHE STRING "Branch/tag for external model repos")
 
-# Legacy cache-variable compatibility.
-if(DEFINED DRAGCPP_NRLMSIS21_REPO)
-  set(ASTROFORCES_NRLMSIS21_REPO "${DRAGCPP_NRLMSIS21_REPO}" CACHE STRING "NRLMSIS 2.1 repo" FORCE)
-endif()
-if(DEFINED DRAGCPP_DTM2020_REPO)
-  set(ASTROFORCES_DTM2020_REPO "${DRAGCPP_DTM2020_REPO}" CACHE STRING "DTM2020 repo" FORCE)
-endif()
-if(DEFINED DRAGCPP_HWM14_REPO)
-  set(ASTROFORCES_HWM14_REPO "${DRAGCPP_HWM14_REPO}" CACHE STRING "HWM14 repo" FORCE)
-endif()
-if(DEFINED DRAGCPP_JPL_EPH_REPO)
-  set(ASTROFORCES_JPL_EPH_REPO "${DRAGCPP_JPL_EPH_REPO}" CACHE STRING "jplEphem repo" FORCE)
-endif()
-if(DEFINED DRAGCPP_EXTERNAL_MODELS_TAG)
-  set(ASTROFORCES_EXTERNAL_MODELS_TAG "${DRAGCPP_EXTERNAL_MODELS_TAG}" CACHE STRING "Branch/tag for external model repos" FORCE)
-endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -43,12 +19,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(${CMAKE_SOURCE_DIR}/cmake/CPM.cmake)
 set(ASTROFORCES_EIGEN_REPO "https://gitlab.com/libeigen/eigen.git" CACHE STRING "Eigen repository URL")
 set(ASTROFORCES_EIGEN_TAG "5.0.0" CACHE STRING "Eigen git tag")
-if(DEFINED DRAGCPP_EIGEN_REPO)
-  set(ASTROFORCES_EIGEN_REPO "${DRAGCPP_EIGEN_REPO}" CACHE STRING "Eigen repository URL" FORCE)
-endif()
-if(DEFINED DRAGCPP_EIGEN_TAG)
-  set(ASTROFORCES_EIGEN_TAG "${DRAGCPP_EIGEN_TAG}" CACHE STRING "Eigen git tag" FORCE)
-endif()
 
 CPMAddPackage(
   NAME eigen
@@ -126,14 +96,6 @@ target_link_libraries(astroforces_adapters PUBLIC
   msis21::msis21
   dtm2020::dtm2020
   hwm14::hwm14)
-
-# Legacy target-name compatibility aliases.
-add_library(dragcpp_atmo_core ALIAS astroforces_atmo_core)
-add_library(dragcpp_space_weather ALIAS astroforces_space_weather)
-add_library(dragcpp_sc_props ALIAS astroforces_sc_props)
-add_library(dragcpp_models_basic ALIAS astroforces_models_basic)
-add_library(dragcpp_drag_core ALIAS astroforces_forces_core)
-add_library(dragcpp_adapters ALIAS astroforces_adapters)
 
 CPMAddPackage(
   NAME nrlmsis21_ext
@@ -290,10 +252,7 @@ if(ASTROFORCES_BUILD_TESTS)
   target_compile_definitions(astroforces_test_adapters PRIVATE
     ASTROFORCES_NRLMSIS21_SOURCE_DIR="${nrlmsis21_ext_SOURCE_DIR}"
     ASTROFORCES_DTM2020_SOURCE_DIR="${dtm2020_ext_SOURCE_DIR}"
-    ASTROFORCES_HWM14_SOURCE_DIR="${hwm14_ext_SOURCE_DIR}"
-    DRAGCPP_NRLMSIS21_SOURCE_DIR="${nrlmsis21_ext_SOURCE_DIR}"
-    DRAGCPP_DTM2020_SOURCE_DIR="${dtm2020_ext_SOURCE_DIR}"
-    DRAGCPP_HWM14_SOURCE_DIR="${hwm14_ext_SOURCE_DIR}")
+    ASTROFORCES_HWM14_SOURCE_DIR="${hwm14_ext_SOURCE_DIR}")
   add_test(NAME DragAdaptersIntegration COMMAND astroforces_test_adapters)
 
   add_executable(astroforces_test_space_weather tests/test_space_weather_celestrak.cpp)
@@ -307,8 +266,7 @@ if(ASTROFORCES_BUILD_TESTS)
     astroforces_atmo_core
     astroforces_space_weather)
   target_compile_definitions(astroforces_test_space_weather_real_snippet PRIVATE
-    ASTROFORCES_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-    DRAGCPP_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+    ASTROFORCES_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
   add_test(NAME SpaceWeatherCelesTrakRealSnippet COMMAND astroforces_test_space_weather_real_snippet)
 
   add_executable(astroforces_test_perturbation_stack tests/test_perturbation_stack.cpp)
@@ -334,8 +292,7 @@ if(ASTROFORCES_BUILD_TESTS)
     astroforces_sc_props
     astroforces_forces_core)
   target_compile_definitions(astroforces_test_third_body PRIVATE
-    ASTROFORCES_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}"
-    DRAGCPP_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
+    ASTROFORCES_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
   add_test(NAME ThirdBody COMMAND astroforces_test_third_body)
 
   add_executable(astroforces_test_srp tests/test_srp.cpp)
@@ -344,8 +301,7 @@ if(ASTROFORCES_BUILD_TESTS)
     astroforces_sc_props
     astroforces_forces_core)
   target_compile_definitions(astroforces_test_srp PRIVATE
-    ASTROFORCES_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}"
-    DRAGCPP_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
+    ASTROFORCES_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
   add_test(NAME SRP COMMAND astroforces_test_srp)
 
   add_executable(astroforces_test_erp tests/test_erp.cpp)
@@ -360,8 +316,7 @@ if(ASTROFORCES_BUILD_TESTS)
     astroforces_atmo_core
     astroforces_forces_core)
   target_compile_definitions(astroforces_test_relativity PRIVATE
-    ASTROFORCES_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}"
-    DRAGCPP_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
+    ASTROFORCES_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
   add_test(NAME Relativity COMMAND astroforces_test_relativity)
 
   add_executable(astroforces_test_gravity_sph tests/test_gravity_sph.cpp)
@@ -369,7 +324,6 @@ if(ASTROFORCES_BUILD_TESTS)
     astroforces_atmo_core
     astroforces_forces_core)
   target_compile_definitions(astroforces_test_gravity_sph PRIVATE
-    ASTROFORCES_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}"
-    DRAGCPP_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
+    ASTROFORCES_JPL_EPH_SOURCE_DIR="${jpl_eph_ext_SOURCE_DIR}")
   add_test(NAME GravitySph COMMAND astroforces_test_gravity_sph)
 endif()
