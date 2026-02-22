@@ -12,6 +12,7 @@ inline constexpr double kEarthEquatorialRadiusM = 6378136.3;
 inline constexpr double kSunRadiusM = 6.9634e8;
 inline constexpr double kMoonRadiusM = 1.7374e6;
 inline constexpr double kEarthMuM3S2 = 3.986004418e14;
+inline constexpr double kEarthRotationRateRadPerSec = 7.2921150e-5;
 inline constexpr double kEarthJ2 = 1.08262668e-3;
 inline constexpr double kSunMuM3S2 = 1.32712440018e20;
 inline constexpr double kMoonMuM3S2 = 4.9048695e12;

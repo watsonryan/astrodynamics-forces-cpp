@@ -54,4 +54,56 @@ inline double utc_seconds_to_julian_date_utc(double utc_seconds) {
   return utc_seconds / 86400.0 + 2440587.5;
 }
 
+inline double gmst_rad_from_jd_utc(double jd_utc) {
+  constexpr double kPi = 3.1415926535897932384626433832795;
+  const double t = (jd_utc - 2451545.0) / 36525.0;
+  double gmst_deg = 280.46061837 + 360.98564736629 * (jd_utc - 2451545.0) + 0.000387933 * t * t - (t * t * t) / 38710000.0;
+  gmst_deg = std::fmod(gmst_deg, 360.0);
+  if (gmst_deg < 0.0) {
+    gmst_deg += 360.0;
+  }
+  return gmst_deg * kPi / 180.0;
+}
+
+inline Vec3 rotate_z(double angle_rad, const Vec3& v) {
+  const double c = std::cos(angle_rad);
+  const double s = std::sin(angle_rad);
+  return Vec3{
+      c * v.x - s * v.y,
+      s * v.x + c * v.y,
+      v.z,
+  };
+}
+
+inline Vec3 eci_to_ecef_position(const Vec3& r_eci_m, double utc_seconds) {
+  const double gmst = gmst_rad_from_jd_utc(utc_seconds_to_julian_date_utc(utc_seconds));
+  return rotate_z(gmst, r_eci_m);
+}
+
+inline Vec3 ecef_to_eci_position(const Vec3& r_ecef_m, double utc_seconds) {
+  const double gmst = gmst_rad_from_jd_utc(utc_seconds_to_julian_date_utc(utc_seconds));
+  return rotate_z(-gmst, r_ecef_m);
+}
+
+inline Vec3 eci_to_ecef_velocity(const Vec3& r_eci_m, const Vec3& v_eci_mps, double utc_seconds) {
+  const double gmst = gmst_rad_from_jd_utc(utc_seconds_to_julian_date_utc(utc_seconds));
+  const Vec3 omega_cross_r_eci{
+      -constants::kEarthRotationRateRadPerSec * r_eci_m.y,
+      constants::kEarthRotationRateRadPerSec * r_eci_m.x,
+      0.0,
+  };
+  return rotate_z(gmst, v_eci_mps - omega_cross_r_eci);
+}
+
+inline Vec3 ecef_to_eci_velocity(const Vec3& r_ecef_m, const Vec3& v_ecef_mps, double utc_seconds) {
+  const double gmst = gmst_rad_from_jd_utc(utc_seconds_to_julian_date_utc(utc_seconds));
+  const Vec3 r_eci_m = rotate_z(-gmst, r_ecef_m);
+  const Vec3 omega_cross_r_eci{
+      -constants::kEarthRotationRateRadPerSec * r_eci_m.y,
+      constants::kEarthRotationRateRadPerSec * r_eci_m.x,
+      0.0,
+  };
+  return rotate_z(-gmst, v_ecef_mps) + omega_cross_r_eci;
+}
+
 }  // namespace astroforces::core

@@ -45,25 +45,6 @@ double circular_speed_mps(double radius_m) {
 
 double magnitude(const astroforces::core::Vec3& v) { return astroforces::core::norm(v); }
 
-astroforces::core::Vec3 ecef_to_eci(const astroforces::core::Vec3& r_ecef_m, double utc_seconds) {
-  constexpr double kPi = 3.1415926535897932384626433832795;
-  const double jd = astroforces::core::utc_seconds_to_julian_date_utc(utc_seconds);
-  const double t = (jd - 2451545.0) / 36525.0;
-  double gmst_deg = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * t * t - (t * t * t) / 38710000.0;
-  gmst_deg = std::fmod(gmst_deg, 360.0);
-  if (gmst_deg < 0.0) {
-    gmst_deg += 360.0;
-  }
-  const double th = gmst_deg * kPi / 180.0;
-  const double c = std::cos(th);
-  const double s = std::sin(th);
-  return astroforces::core::Vec3{
-      c * r_ecef_m.x - s * r_ecef_m.y,
-      s * r_ecef_m.x + c * r_ecef_m.y,
-      r_ecef_m.z,
-  };
-}
-
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -236,8 +217,8 @@ int main(int argc, char** argv) {
     astroforces::core::StateVector third_state{};
     third_state.epoch.utc_seconds = epoch_utc_s;
     third_state.frame = astroforces::core::Frame::ECI;
-    third_state.position_m = ecef_to_eci(r_ecef_m, epoch_utc_s);
-    third_state.velocity_mps = ecef_to_eci(v_ecef_mps, epoch_utc_s);
+    third_state.position_m = astroforces::core::ecef_to_eci_position(r_ecef_m, epoch_utc_s);
+    third_state.velocity_mps = astroforces::core::ecef_to_eci_velocity(r_ecef_m, v_ecef_mps, epoch_utc_s);
 
     std::vector<double> gravity_mags{};
     if (gravity) {

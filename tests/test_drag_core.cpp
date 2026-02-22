@@ -8,6 +8,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "astroforces/atmo/conversions.hpp"
 #include "astroforces/forces/surface/drag/drag_model.hpp"
 #include "astroforces/models/exponential_atmosphere.hpp"
 #include "astroforces/sc/spacecraft.hpp"
@@ -32,7 +33,7 @@ int main() {
   forces::DragAccelerationModel model(weather, atmosphere, wind);
 
   core::StateVector state{};
-  state.frame = core::Frame::ECI;
+  state.frame = core::Frame::ECEF;
   state.position_m = core::Vec3{6378137.0, 0.0, 0.0};
   state.velocity_mps = core::Vec3{7500.0, 0.0, 0.0};
 
@@ -56,6 +57,24 @@ int main() {
   if (!approx(out.relative_speed_mps, 7500.0, 1e-12) || !approx(out.dynamic_pressure_pa, 0.5 * 1.225 * 7500.0 * 7500.0, 1e-12)) {
     spdlog::error("derived drag scalars mismatch");
     return 7;
+  }
+
+  core::StateVector state_eci{};
+  state_eci.epoch = state.epoch;
+  state_eci.frame = core::Frame::ECI;
+  state_eci.position_m = core::ecef_to_eci_position(state.position_m, state.epoch.utc_seconds);
+  state_eci.velocity_mps = core::ecef_to_eci_velocity(state.position_m, state.velocity_mps, state.epoch.utc_seconds);
+  state_eci.body_from_frame_dcm = state.body_from_frame_dcm;
+  const auto out_eci = model.evaluate(state_eci, sc);
+  if (out_eci.status != core::Status::Ok) {
+    spdlog::error("eci drag evaluation failed");
+    return 9;
+  }
+  if (!approx(out_eci.relative_speed_mps, out.relative_speed_mps, 1e-12) ||
+      !approx(out_eci.dynamic_pressure_pa, out.dynamic_pressure_pa, 1e-12) ||
+      !approx(core::norm(out_eci.acceleration_mps2), core::norm(out.acceleration_mps2), 1e-12)) {
+    spdlog::error("eci/ecef drag mismatch");
+    return 10;
   }
 
   sc::SpacecraftProperties macro_sc{
