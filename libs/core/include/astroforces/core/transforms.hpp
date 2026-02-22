@@ -23,6 +23,12 @@ struct RotationWithDerivative {
   Mat3 dr{};
 };
 
+struct GcrfItrfTransformContext {
+  Mat3 r{};
+  Mat3 dr{};
+  Mat3 rt{};
+};
+
 inline Vec3 cross(const Vec3& a, const Vec3& b) {
   return vec_cross(a, b);
 }
@@ -334,6 +340,52 @@ inline RotationWithDerivative gcrf_to_itrf_rotation_with_derivative(
   return gcrf_to_itrf_rotation_with_derivative_exact(jd_utc, jd_tt, cip, CelestialIntermediatePoleRate{}, eop, EarthOrientationRate{});
 }
 
+inline GcrfItrfTransformContext gcrf_to_itrf_transform_context(
+    const double jd_utc,
+    const double jd_tt,
+    const CelestialIntermediatePole& cip,
+    const EarthOrientation& eop) {
+  const RotationWithDerivative rd = gcrf_to_itrf_rotation_with_derivative(jd_utc, jd_tt, cip, eop);
+  return GcrfItrfTransformContext{
+      .r = rd.r,
+      .dr = rd.dr,
+      .rt = mat_transpose(rd.r),
+  };
+}
+
+inline GcrfItrfTransformContext gcrf_to_itrf_transform_context_exact(
+    const double jd_utc,
+    const double jd_tt,
+    const CelestialIntermediatePole& cip,
+    const CelestialIntermediatePoleRate& cip_rate,
+    const EarthOrientation& eop,
+    const EarthOrientationRate& eop_rate) {
+  const RotationWithDerivative rd = gcrf_to_itrf_rotation_with_derivative_exact(jd_utc, jd_tt, cip, cip_rate, eop, eop_rate);
+  return GcrfItrfTransformContext{
+      .r = rd.r,
+      .dr = rd.dr,
+      .rt = mat_transpose(rd.r),
+  };
+}
+
+inline Vec3 gcrf_to_itrf_position(const Vec3& r_gcrf, const GcrfItrfTransformContext& ctx) {
+  return mat_vec(ctx.r, r_gcrf);
+}
+
+inline Vec3 itrf_to_gcrf_position(const Vec3& r_itrf, const GcrfItrfTransformContext& ctx) {
+  return mat_vec(ctx.rt, r_itrf);
+}
+
+inline Vec3 gcrf_to_itrf_velocity(const Vec3& r_gcrf, const Vec3& v_gcrf, const GcrfItrfTransformContext& ctx) {
+  return mat_vec(ctx.r, v_gcrf) + mat_vec(ctx.dr, r_gcrf);
+}
+
+inline Vec3 itrf_to_gcrf_velocity(const Vec3& r_itrf, const Vec3& v_itrf, const GcrfItrfTransformContext& ctx) {
+  const Vec3 r_gcrf = mat_vec(ctx.rt, r_itrf);
+  const Vec3 correction = mat_vec(ctx.dr, r_gcrf);
+  return mat_vec(ctx.rt, v_itrf - correction);
+}
+
 inline Vec3 gcrf_to_itrf_position(
     const Vec3& r_gcrf,
     const double jd_utc,
@@ -360,8 +412,8 @@ inline Vec3 gcrf_to_itrf_velocity(
     const double jd_tt,
     const CelestialIntermediatePole& cip,
     const EarthOrientation& eop) {
-  const RotationWithDerivative rd = gcrf_to_itrf_rotation_with_derivative(jd_utc, jd_tt, cip, eop);
-  return mat_vec(rd.r, v_gcrf) + mat_vec(rd.dr, r_gcrf);
+  const auto ctx = gcrf_to_itrf_transform_context(jd_utc, jd_tt, cip, eop);
+  return gcrf_to_itrf_velocity(r_gcrf, v_gcrf, ctx);
 }
 
 inline Vec3 itrf_to_gcrf_velocity(
@@ -371,11 +423,8 @@ inline Vec3 itrf_to_gcrf_velocity(
     const double jd_tt,
     const CelestialIntermediatePole& cip,
     const EarthOrientation& eop) {
-  const RotationWithDerivative rd = gcrf_to_itrf_rotation_with_derivative(jd_utc, jd_tt, cip, eop);
-  const Mat3 rt = mat_transpose(rd.r);
-  const Vec3 r_gcrf = mat_vec(rt, r_itrf);
-  const Vec3 correction = mat_vec(rd.dr, r_gcrf);
-  return mat_vec(rt, v_itrf - correction);
+  const auto ctx = gcrf_to_itrf_transform_context(jd_utc, jd_tt, cip, eop);
+  return itrf_to_gcrf_velocity(r_itrf, v_itrf, ctx);
 }
 
 }  // namespace astroforces::core
