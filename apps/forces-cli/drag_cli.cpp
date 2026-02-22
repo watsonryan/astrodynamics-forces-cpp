@@ -1,5 +1,5 @@
 /**
- * @file main.cpp
+ * @file drag_cli.cpp
  * @brief astroforces drag command-line entrypoint.
  * @author Watosn
  */

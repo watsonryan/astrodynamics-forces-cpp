@@ -35,17 +35,17 @@ flowchart LR
 - `sc-props`: spacecraft macro geometry and drag-relevant properties
 - `forces-core`: drag, full SPH gravity+tides, ERP, SRP, relativity, third-body, and generic perturbation interfaces
 - `forces/surface_force`: shared surface-force kernel (cannonball + macro plate projection)
-- `apps/drag-cli`: single-state CLI
-- `apps/drag_batch_cli`: batched drag outputs (CSV/JSON)
-- `apps/third_body_cli`: single-state Sun/Moon third-body evaluation
-- `apps/third_body_batch_cli`: batched Sun/Moon third-body outputs
-- `apps/erp_cli`: single-state ERP evaluation
-- `apps/erp_batch_cli`: batched ERP outputs
-- `apps/relativity_cli`: single-state relativistic acceleration evaluation
-- `apps/gravity_sph_cli`: single-state full SPH gravity and tides evaluation
-- `apps/srp_cli`: single-state SRP evaluation
-- `apps/srp_batch_cli`: batched SRP outputs
-- `apps/perturbation_profile_cli`: altitude sweep profiler with per-component outputs
+- `apps/forces-cli/drag_cli.cpp`: single-state drag evaluation
+- `apps/forces-cli/drag_batch_cli.cpp`: batched drag outputs (CSV/JSON)
+- `apps/forces-cli/third_body_cli.cpp`: single-state Sun/Moon third-body evaluation
+- `apps/forces-cli/third_body_batch_cli.cpp`: batched Sun/Moon third-body outputs
+- `apps/forces-cli/erp_cli.cpp`: single-state ERP evaluation
+- `apps/forces-cli/erp_batch_cli.cpp`: batched ERP outputs
+- `apps/forces-cli/relativity_cli.cpp`: single-state relativistic acceleration evaluation
+- `apps/forces-cli/gravity_sph_cli.cpp`: single-state full SPH gravity and tides evaluation
+- `apps/forces-cli/srp_cli.cpp`: single-state SRP evaluation
+- `apps/forces-cli/srp_batch_cli.cpp`: batched SRP outputs
+- `apps/forces-cli/perturbation_profile_cli.cpp`: altitude sweep profiler with per-component outputs
 - `scripts/plot_perturbation_profile.py`: publication-style plot generation for profile CSV
 
 ## Force Abstraction

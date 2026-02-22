@@ -136,7 +136,7 @@ CPMAddPackage(
 
 target_link_libraries(astroforces_forces_core PRIVATE jpl::eph)
 
-add_executable(drag_cli apps/drag-cli/main.cpp)
+add_executable(drag_cli apps/forces-cli/drag_cli.cpp)
 target_link_libraries(drag_cli PRIVATE
   astroforces_atmo_core
   astroforces_space_weather
@@ -145,7 +145,7 @@ target_link_libraries(drag_cli PRIVATE
   astroforces_models_basic
   astroforces_forces_core)
 
-add_executable(drag_batch_cli apps/drag-cli/drag_batch_cli.cpp)
+add_executable(drag_batch_cli apps/forces-cli/drag_batch_cli.cpp)
 target_link_libraries(drag_batch_cli PRIVATE
   astroforces_atmo_core
   astroforces_space_weather
@@ -154,7 +154,7 @@ target_link_libraries(drag_batch_cli PRIVATE
   astroforces_models_basic
   astroforces_forces_core)
 
-add_executable(perturbation_profile_cli apps/drag-cli/perturbation_profile_cli.cpp)
+add_executable(perturbation_profile_cli apps/forces-cli/perturbation_profile_cli.cpp)
 target_link_libraries(perturbation_profile_cli PRIVATE
   astroforces_atmo_core
   astroforces_space_weather

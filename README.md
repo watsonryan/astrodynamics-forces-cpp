@@ -15,17 +15,17 @@ flowchart LR
   D --> E
   E --> F
   T[third-body<br/>Sun+Moon via jplEphem] --> F
-  F --> G[apps/drag-cli]
-  F --> H[apps/drag_batch_cli]
-  F --> X[apps/third_body_cli]
-  F --> Y[apps/third_body_batch_cli]
-  F --> S[apps/srp_cli]
-  F --> U[apps/srp_batch_cli]
-  F --> R[apps/erp_cli]
-  F --> V[apps/erp_batch_cli]
-  F --> W[apps/relativity_cli]
-  F --> K[apps/gravity_sph_cli]
-  F --> P[apps/perturbation_profile_cli]
+  F --> G[apps/forces-cli/drag_cli.cpp]
+  F --> H[apps/forces-cli/drag_batch_cli.cpp]
+  F --> X[apps/forces-cli/third_body_cli.cpp]
+  F --> Y[apps/forces-cli/third_body_batch_cli.cpp]
+  F --> S[apps/forces-cli/srp_cli.cpp]
+  F --> U[apps/forces-cli/srp_batch_cli.cpp]
+  F --> R[apps/forces-cli/erp_cli.cpp]
+  F --> V[apps/forces-cli/erp_batch_cli.cpp]
+  F --> W[apps/forces-cli/relativity_cli.cpp]
+  F --> K[apps/forces-cli/gravity_sph_cli.cpp]
+  F --> P[apps/forces-cli/perturbation_profile_cli.cpp]
   P --> Q[scripts/plot_perturbation_profile.py]
   I[external repos via CPM] --> D
   I --> T
