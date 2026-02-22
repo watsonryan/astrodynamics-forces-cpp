@@ -43,6 +43,14 @@ int main() {
     spdlog::error("erp scalar outputs invalid at near-state");
     return 3;
   }
+  if (std::abs(near_out.earth_radiation_pressure_pa - (near_out.albedo_pressure_pa + near_out.ir_pressure_pa)) > 1e-18) {
+    spdlog::error("erp total pressure is not albedo+ir");
+    return 7;
+  }
+  if (!(near_out.albedo_phase_function >= 0.0 && near_out.albedo_phase_function <= 1.0)) {
+    spdlog::error("erp albedo phase is out of bounds: {}", near_out.albedo_phase_function);
+    return 8;
+  }
 
   auto far_state = near_state;
   far_state.position_m = 2.0 * near_state.position_m;
@@ -67,6 +75,15 @@ int main() {
     return 6;
   }
 
+  const astroforces::forces::ErpAccelerationModel erp_ir_only({
+      .use_albedo = false,
+      .use_earth_ir = true,
+  });
+  const auto ir_only = erp_ir_only.evaluate(near_state, sc);
+  if (ir_only.status != astroforces::core::Status::Ok || !(ir_only.ir_pressure_pa > 0.0) || ir_only.albedo_pressure_pa != 0.0) {
+    spdlog::error("erp ir-only mode failed");
+    return 9;
+  }
+
   return 0;
 }
-

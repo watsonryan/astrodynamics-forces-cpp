@@ -18,6 +18,9 @@ inline constexpr double kAstronomicalUnitM = 149597870700.0;
 inline constexpr double kSpeedOfLightMps = 299792458.0;
 inline constexpr double kEarthLoveNumberK2 = 0.3;
 inline constexpr double kSolarRadiationPressureAt1AuPa = 4.56e-6;
+inline constexpr double kSolarIrradianceAt1AuWm2 = 1361.0;
+inline constexpr double kEarthBondAlbedo = 0.3;
+inline constexpr double kEarthIrFluxWm2 = 237.0;
 inline constexpr double kEarthRadiationPressureAtEarthRadiusPa = 8.0e-7;
 
 }  // namespace astroforces::core::constants
