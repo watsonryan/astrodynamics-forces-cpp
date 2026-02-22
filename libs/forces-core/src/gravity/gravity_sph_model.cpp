@@ -20,6 +20,7 @@
 #include <Eigen/Dense>
 
 #include "astroforces/core/transforms.hpp"
+#include "astroforces/forces/gravity/tides/pole_tide.hpp"
 #include "astroforces/forces/gravity/tides/solid_earth_tide.hpp"
 #include "jpl_eph/jpl_eph.hpp"
 
@@ -499,6 +500,16 @@ std::unique_ptr<GravitySphAccelerationModel> GravitySphAccelerationModel::Create
     }
   }
 
+  if (config.use_pole_tide_solid || config.use_pole_tide_ocean) {
+    if (!config.eop_finals_file.empty()) {
+      auto eop_series = std::make_shared<astroforces::core::eop::Series>(
+          astroforces::core::eop::Series::load_iers_finals(config.eop_finals_file));
+      if (!eop_series->empty()) {
+        out->eop_ = std::move(eop_series);
+      }
+    }
+  }
+
   return out;
 }
 
@@ -587,6 +598,38 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
         Seff += dS;
       }
 
+      if (config_.use_pole_tide_solid || config_.use_pole_tide_ocean) {
+        if (!eop_) {
+          return GravitySphResult{.status = astroforces::core::Status::DataUnavailable};
+        }
+        const auto eop_now = eop_->at_utc_seconds(state.epoch.utc_seconds);
+        if (!eop_now.has_value()) {
+          return GravitySphResult{.status = astroforces::core::Status::DataUnavailable};
+        }
+
+        constexpr double kApproxTtMinusUtcSeconds = 69.184;
+        const double jd_tt = jd_utc + kApproxTtMinusUtcSeconds / astroforces::core::constants::kSecondsPerDay;
+        const double mjd_tt = jd_tt - 2400000.5;
+
+        if (config_.use_pole_tide_solid) {
+          Eigen::MatrixXd dC_pole_solid = Eigen::MatrixXd::Zero(Ceff.rows(), Ceff.cols());
+          Eigen::MatrixXd dS_pole_solid = Eigen::MatrixXd::Zero(Seff.rows(), Seff.cols());
+          tides::add_pole_solid_tide_delta(mjd_tt, eop_now->xp_rad, eop_now->yp_rad, dC_pole_solid, dS_pole_solid);
+          out.pole_tide_solid_mps2 = accel_sph_noncentral(r_ecef, dC_pole_solid, dS_pole_solid, nmax, mu_earth, radius_m);
+          Ceff += dC_pole_solid;
+          Seff += dS_pole_solid;
+        }
+
+        if (config_.use_pole_tide_ocean) {
+          Eigen::MatrixXd dC_pole_ocean = Eigen::MatrixXd::Zero(Ceff.rows(), Ceff.cols());
+          Eigen::MatrixXd dS_pole_ocean = Eigen::MatrixXd::Zero(Seff.rows(), Seff.cols());
+          tides::add_pole_ocean_tide_delta(mjd_tt, eop_now->xp_rad, eop_now->yp_rad, dC_pole_ocean, dS_pole_ocean);
+          out.pole_tide_ocean_mps2 = accel_sph_noncentral(r_ecef, dC_pole_ocean, dS_pole_ocean, nmax, mu_earth, radius_m);
+          Ceff += dC_pole_ocean;
+          Seff += dS_pole_ocean;
+        }
+      }
+
       out.sph_mps2 = accel_sph_noncentral(r_ecef, Ceff, Seff, nmax, mu_earth, radius_m);
     }
   }
@@ -599,6 +642,8 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
     out.sph_mps2 = rot_z(-gmst, out.sph_mps2);
     out.solid_tide_sun_mps2 = rot_z(-gmst, out.solid_tide_sun_mps2);
     out.solid_tide_moon_mps2 = rot_z(-gmst, out.solid_tide_moon_mps2);
+    out.pole_tide_solid_mps2 = rot_z(-gmst, out.pole_tide_solid_mps2);
+    out.pole_tide_ocean_mps2 = rot_z(-gmst, out.pole_tide_ocean_mps2);
   }
 
   if (!finite_vec(out.acceleration_mps2)) {

@@ -41,6 +41,17 @@ std::filesystem::path write_test_gfc() {
   return p;
 }
 
+std::filesystem::path write_test_eop() {
+  namespace fs = std::filesystem;
+  const fs::path p = fs::temp_directory_path() / "astroforces_test_eop.txt";
+  std::ofstream out(p);
+  out << " 24 12 31 60676.00 I  0.123456 0.000001  0.234567 0.000001 I  0.1000000 0.0001000  0.900 0.010\n";
+  out << " 25  1  1 60677.00 I  0.223456 0.000001  0.334567 0.000001 I  0.1200000 0.0001000  1.100 0.010\n";
+  out << " 25  1  2 60678.00 P  0.323456 0.000001  0.434567 0.000001 P  0.1500000 0.0001000  1.300 0.010\n";
+  out.close();
+  return p;
+}
+
 }  // namespace
 
 int main() {
@@ -120,6 +131,45 @@ int main() {
     if (!(astroforces::core::norm(tide_delta) > 0.0)) {
       spdlog::error("solid Earth tides had no effect");
       return 6;
+    }
+  }
+
+  const auto eop_file = write_test_eop();
+  if (fs::exists(eop_file)) {
+    const auto no_pole_tides = astroforces::forces::GravitySphAccelerationModel::Create(
+        {.gravity_model_file = gravity_file,
+         .max_degree = 4,
+         .use_central = true,
+         .use_sph = true,
+         .use_solid_earth_tides = false,
+         .use_pole_tide_solid = false,
+         .use_pole_tide_ocean = false});
+    const auto with_pole_tides = astroforces::forces::GravitySphAccelerationModel::Create(
+        {.gravity_model_file = gravity_file,
+         .eop_finals_file = eop_file,
+         .max_degree = 4,
+         .use_central = true,
+         .use_sph = true,
+         .use_solid_earth_tides = false,
+         .use_pole_tide_solid = true,
+         .use_pole_tide_ocean = true});
+
+    const auto out_no_pole = no_pole_tides->evaluate(state);
+    const auto out_with_pole = with_pole_tides->evaluate(state);
+    if (out_no_pole.status != astroforces::core::Status::Ok || out_with_pole.status != astroforces::core::Status::Ok) {
+      spdlog::error("pole tide model evaluation failed");
+      return 8;
+    }
+
+    const auto pole_delta = astroforces::core::Vec3{
+        out_with_pole.acceleration_mps2.x - out_no_pole.acceleration_mps2.x,
+        out_with_pole.acceleration_mps2.y - out_no_pole.acceleration_mps2.y,
+        out_with_pole.acceleration_mps2.z - out_no_pole.acceleration_mps2.z};
+    if (!(astroforces::core::norm(pole_delta) > 0.0)
+        || !(astroforces::core::norm(out_with_pole.pole_tide_solid_mps2) > 0.0)
+        || !(astroforces::core::norm(out_with_pole.pole_tide_ocean_mps2) > 0.0)) {
+      spdlog::error("pole tides had no effect");
+      return 9;
     }
   }
 
