@@ -8,7 +8,7 @@
 
 #include <utility>
 
-#include "astroforces/atmo/conversions.hpp"
+#include "astroforces/core/transforms.hpp"
 #include "msis21/msis21.hpp"
 
 namespace astroforces::adapters {

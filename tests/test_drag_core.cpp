@@ -8,7 +8,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "astroforces/atmo/conversions.hpp"
+#include "astroforces/core/transforms.hpp"
 #include "astroforces/forces/surface/drag/drag_model.hpp"
 #include "astroforces/models/exponential_atmosphere.hpp"
 #include "astroforces/sc/spacecraft.hpp"

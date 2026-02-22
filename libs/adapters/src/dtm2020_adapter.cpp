@@ -8,7 +8,7 @@
 
 #include <utility>
 
-#include "astroforces/atmo/conversions.hpp"
+#include "astroforces/core/transforms.hpp"
 #include "dtm2020/dtm2020_operational.hpp"
 
 namespace astroforces::adapters {

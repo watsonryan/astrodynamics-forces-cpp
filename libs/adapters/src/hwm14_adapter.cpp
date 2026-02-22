@@ -9,7 +9,7 @@
 #include <cmath>
 #include <utility>
 
-#include "astroforces/atmo/conversions.hpp"
+#include "astroforces/core/transforms.hpp"
 #include "hwm14/hwm14.hpp"
 
 namespace astroforces::adapters {

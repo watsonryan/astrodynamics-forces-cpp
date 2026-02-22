@@ -9,7 +9,7 @@
 #include <array>
 #include <cmath>
 
-#include "astroforces/atmo/conversions.hpp"
+#include "astroforces/core/transforms.hpp"
 #include "jpl_eph/jpl_eph.hpp"
 
 namespace astroforces::forces {
@@ -31,14 +31,6 @@ astroforces::core::Status map_jpl_error(const jpl::eph::Status& s) {
 }
 
 astroforces::core::Vec3 to_vec3(const std::array<double, 6>& pv) { return astroforces::core::Vec3{pv[0], pv[1], pv[2]}; }
-
-astroforces::core::Vec3 cross(const astroforces::core::Vec3& a, const astroforces::core::Vec3& b) {
-  return astroforces::core::Vec3{
-      a.y * b.z - a.z * b.y,
-      a.z * b.x - a.x * b.z,
-      a.x * b.y - a.y * b.x,
-  };
-}
 
 bool finite_vec(const astroforces::core::Vec3& v) {
   return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
@@ -105,7 +97,7 @@ RelativityResult RelativityAccelerationModel::evaluate(const astroforces::core::
       return RelativityResult{.status = astroforces::core::Status::NumericalError};
     }
     const double pref = -(1.0 + 2.0 * config_.ppn_gamma) * config_.mu_sun_m3_s2 / (c2 * R * R * R);
-    out.geodesic_precession_mps2 = pref * cross(cross(V_es, R_es), v);
+    out.geodesic_precession_mps2 = pref * astroforces::core::cross(astroforces::core::cross(V_es, R_es), v);
   }
 
   if (config_.use_lense_thirring) {
@@ -115,7 +107,8 @@ RelativityResult RelativityAccelerationModel::evaluate(const astroforces::core::
     const double pref = (1.0 + config_.ppn_gamma) * config_.lense_thirring_parameter * config_.mu_earth_m3_s2 /
                         (c2 * rnorm * rnorm * rnorm);
     out.lense_thirring_mps2 =
-        pref * ((3.0 * astroforces::core::dot(r, J) / r2) * cross(r, v) + cross(v, J));
+        pref * ((3.0 * astroforces::core::dot(r, J) / r2) * astroforces::core::cross(r, v)
+                + astroforces::core::cross(v, J));
   }
 
   if (config_.use_oblateness_j2) {

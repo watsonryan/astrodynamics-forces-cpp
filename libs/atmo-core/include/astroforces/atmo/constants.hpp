@@ -7,6 +7,13 @@
 
 namespace astroforces::core::constants {
 
+inline constexpr double kPi = 3.1415926535897932384626433832795;
+inline constexpr double kTwoPi = 2.0 * kPi;
+inline constexpr double kDegToRad = kPi / 180.0;
+inline constexpr double kArcsecToRad = kDegToRad / 3600.0;
+inline constexpr double kSecondsPerDay = 86400.0;
+inline constexpr double kJ2000Jd = 2451545.0;
+
 inline constexpr double kEarthRadiusWgs84M = 6378137.0;
 inline constexpr double kEarthEquatorialRadiusM = 6378136.3;
 inline constexpr double kSunRadiusM = 6.9634e8;

@@ -13,7 +13,7 @@
 #include "astroforces/adapters/dtm2020_adapter.hpp"
 #include "astroforces/adapters/hwm14_adapter.hpp"
 #include "astroforces/adapters/nrlmsis21_adapter.hpp"
-#include "astroforces/atmo/conversions.hpp"
+#include "astroforces/core/transforms.hpp"
 #include "astroforces/forces/surface/drag/drag_model.hpp"
 #include "astroforces/sc/spacecraft.hpp"
 #include "astroforces/weather/static_provider.hpp"

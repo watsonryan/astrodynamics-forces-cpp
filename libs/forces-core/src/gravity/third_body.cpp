@@ -8,7 +8,7 @@
 
 #include <cmath>
 
-#include "astroforces/atmo/conversions.hpp"
+#include "astroforces/core/transforms.hpp"
 #include "astroforces/atmo/constants.hpp"
 #include "jpl_eph/jpl_eph.hpp"
 

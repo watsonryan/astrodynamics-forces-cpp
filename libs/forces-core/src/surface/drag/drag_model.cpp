@@ -10,7 +10,7 @@
 
 #include <Eigen/Dense>
 
-#include "astroforces/atmo/conversions.hpp"
+#include "astroforces/core/transforms.hpp"
 #include "astroforces/forces/surface/surface_force.hpp"
 
 namespace astroforces::forces {

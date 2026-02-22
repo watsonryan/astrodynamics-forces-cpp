@@ -13,7 +13,7 @@
 
 #include <Eigen/Dense>
 
-#include "astroforces/atmo/conversions.hpp"
+#include "astroforces/core/transforms.hpp"
 #include "astroforces/forces/surface/eclipse.hpp"
 #include "astroforces/forces/surface/surface_force.hpp"
 #include "jpl_eph/jpl_eph.hpp"

@@ -50,6 +50,21 @@ struct GeodeticPoint {
   double alt_m{};
 };
 
+struct EarthOrientation {
+  double xp_rad{};
+  double yp_rad{};
+  double dut1_s{};
+  double lod_s{};
+  double dX_rad{};
+  double dY_rad{};
+};
+
+struct CelestialIntermediatePole {
+  double x_rad{};
+  double y_rad{};
+  double s_rad{};
+};
+
 struct WeatherIndices {
   double f107{};
   double f107a{};
