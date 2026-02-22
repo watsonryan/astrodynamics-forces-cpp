@@ -3,7 +3,7 @@
 Cross-check astroforces frame transforms against Astropy.
 
 This script validates two paths:
-1) "simple" ECI<->ECEF GMST-spin path
+1) "gmst_approx" ECI<->ECEF GMST-spin path
 2) GCRF<->ITRF path using CIP/EOP inputs
 
 Requires:
@@ -57,7 +57,8 @@ def parse_vec(line: str) -> Vec3:
 
 def run_cli(cli: Path, args: list[str]) -> list[str]:
     out = subprocess.check_output([str(cli), *args], text=True)
-    return [ln for ln in out.splitlines() if ln.strip()]
+    # Keep only key=value data records; ignore logger output lines.
+    return [ln for ln in out.splitlines() if ln.strip() and "=" in ln]
 
 
 def norm(v: np.ndarray) -> float:
@@ -68,7 +69,7 @@ def simple_case(cli: Path, t_utc: Time, r_gcrf_m: Vec3, v_gcrf_mps: Vec3) -> tup
     lines = run_cli(
         cli,
         [
-            "simple",
+            "gmst_approx",
             f"{t_utc.unix:.6f}",
             f"{r_gcrf_m.x:.16e}",
             f"{r_gcrf_m.y:.16e}",

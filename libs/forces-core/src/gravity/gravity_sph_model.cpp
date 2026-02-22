@@ -568,12 +568,13 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
     if (!eop_ || !cip_) {
       return GravitySphResult{.status = astroforces::core::Status::InvalidInput};
     }
-    const auto eop_now = eop_->at_utc_seconds(state.epoch.utc_seconds);
-    const auto cip_now = cip_->at_utc_seconds(state.epoch.utc_seconds);
+    const auto eop_now = eop_->sample_at_utc_seconds(state.epoch.utc_seconds);
+    const auto cip_now = cip_->sample_at_utc_seconds(state.epoch.utc_seconds);
     if (!eop_now.has_value() || !cip_now.has_value()) {
       return GravitySphResult{.status = astroforces::core::Status::DataUnavailable};
     }
-    strict_rd = astroforces::core::gcrf_to_itrf_rotation_with_derivative(jd_utc, jd_tt, *cip_now, *eop_now);
+    strict_rd = astroforces::core::gcrf_to_itrf_rotation_with_derivative_exact(
+        jd_utc, jd_tt, cip_now->value, cip_now->rate, eop_now->value, eop_now->rate);
   }
 
   const bool needs_gmst = (state.frame == astroforces::core::Frame::ECI)
