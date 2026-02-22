@@ -29,6 +29,10 @@ struct GcrfItrfTransformContext {
   Mat3 rt{};
 };
 
+struct ApproxEciEcefContext {
+  double gmst_rad{};
+};
+
 inline Vec3 cross(const Vec3& a, const Vec3& b) {
   return vec_cross(a, b);
 }
@@ -143,35 +147,53 @@ inline Vec3 rotate_z(double angle_rad, const Vec3& v) {
   return mat_vec(sofa::rot_z(angle_rad), v);
 }
 
+inline ApproxEciEcefContext build_approx_eci_ecef_context(double utc_seconds) {
+  return ApproxEciEcefContext{
+      .gmst_rad = gmst_rad_from_jd_utc(utc_seconds_to_julian_date_utc(utc_seconds)),
+  };
+}
+
+inline Vec3 eci_to_ecef_position(const Vec3& r_eci_m, const ApproxEciEcefContext& ctx) {
+  return rotate_z(ctx.gmst_rad, r_eci_m);
+}
+
+inline Vec3 ecef_to_eci_position(const Vec3& r_ecef_m, const ApproxEciEcefContext& ctx) {
+  return rotate_z(-ctx.gmst_rad, r_ecef_m);
+}
+
+inline Vec3 eci_to_ecef_velocity(const Vec3& r_eci_m, const Vec3& v_eci_mps, const ApproxEciEcefContext& ctx) {
+  const Vec3 omega_cross_r_eci{-constants::kEarthRotationRateRadPerSec * r_eci_m.y,
+                                constants::kEarthRotationRateRadPerSec * r_eci_m.x,
+                                0.0};
+  return rotate_z(ctx.gmst_rad, v_eci_mps - omega_cross_r_eci);
+}
+
+inline Vec3 ecef_to_eci_velocity(const Vec3& r_ecef_m, const Vec3& v_ecef_mps, const ApproxEciEcefContext& ctx) {
+  const Vec3 r_eci_m = rotate_z(-ctx.gmst_rad, r_ecef_m);
+  const Vec3 omega_cross_r_eci{-constants::kEarthRotationRateRadPerSec * r_eci_m.y,
+                                constants::kEarthRotationRateRadPerSec * r_eci_m.x,
+                                0.0};
+  return rotate_z(-ctx.gmst_rad, v_ecef_mps) + omega_cross_r_eci;
+}
+
 // Approximate GMST-only transform (no precession/nutation/polar motion). Use
 // gcrf_to_itrf_* with EOP/CIP inputs for production-quality navigation.
 inline Vec3 eci_to_ecef_position(const Vec3& r_eci_m, double utc_seconds) {
-  const double gmst = gmst_rad_from_jd_utc(utc_seconds_to_julian_date_utc(utc_seconds));
-  return rotate_z(gmst, r_eci_m);
+  return eci_to_ecef_position(r_eci_m, build_approx_eci_ecef_context(utc_seconds));
 }
 
 // Approximate GMST-only transform (no precession/nutation/polar motion). Use
 // itrf_to_gcrf_* with EOP/CIP inputs for production-quality navigation.
 inline Vec3 ecef_to_eci_position(const Vec3& r_ecef_m, double utc_seconds) {
-  const double gmst = gmst_rad_from_jd_utc(utc_seconds_to_julian_date_utc(utc_seconds));
-  return rotate_z(-gmst, r_ecef_m);
+  return ecef_to_eci_position(r_ecef_m, build_approx_eci_ecef_context(utc_seconds));
 }
 
 inline Vec3 eci_to_ecef_velocity(const Vec3& r_eci_m, const Vec3& v_eci_mps, double utc_seconds) {
-  const double gmst = gmst_rad_from_jd_utc(utc_seconds_to_julian_date_utc(utc_seconds));
-  const Vec3 omega_cross_r_eci{-constants::kEarthRotationRateRadPerSec * r_eci_m.y,
-                                constants::kEarthRotationRateRadPerSec * r_eci_m.x,
-                                0.0};
-  return rotate_z(gmst, v_eci_mps - omega_cross_r_eci);
+  return eci_to_ecef_velocity(r_eci_m, v_eci_mps, build_approx_eci_ecef_context(utc_seconds));
 }
 
 inline Vec3 ecef_to_eci_velocity(const Vec3& r_ecef_m, const Vec3& v_ecef_mps, double utc_seconds) {
-  const double gmst = gmst_rad_from_jd_utc(utc_seconds_to_julian_date_utc(utc_seconds));
-  const Vec3 r_eci_m = rotate_z(-gmst, r_ecef_m);
-  const Vec3 omega_cross_r_eci{-constants::kEarthRotationRateRadPerSec * r_eci_m.y,
-                                constants::kEarthRotationRateRadPerSec * r_eci_m.x,
-                                0.0};
-  return rotate_z(-gmst, v_ecef_mps) + omega_cross_r_eci;
+  return ecef_to_eci_velocity(r_ecef_m, v_ecef_mps, build_approx_eci_ecef_context(utc_seconds));
 }
 
 inline double tio_locator_sp_rad(const double jd_tt) {

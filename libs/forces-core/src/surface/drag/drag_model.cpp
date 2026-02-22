@@ -7,6 +7,7 @@
 #include "astroforces/forces/surface/drag/drag_model.hpp"
 
 #include <cmath>
+#include <optional>
 
 #include "astroforces/core/transforms.hpp"
 #include "astroforces/forces/surface/surface_force.hpp"
@@ -37,13 +38,19 @@ DragResult DragAccelerationModel::evaluate(const astroforces::core::StateVector&
   if (w.status != astroforces::core::Status::Ok) {
     return DragResult{.status = w.status};
   }
+  std::optional<astroforces::core::ApproxEciEcefContext> frame_ctx{};
+  const auto& get_frame_ctx = [&]() -> const astroforces::core::ApproxEciEcefContext& {
+    if (!frame_ctx.has_value()) {
+      frame_ctx = astroforces::core::build_approx_eci_ecef_context(state.epoch.utc_seconds);
+    }
+    return *frame_ctx;
+  };
 
   astroforces::core::StateVector eval_state = state;
   if (state.frame == astroforces::core::Frame::ECI) {
     eval_state.frame = astroforces::core::Frame::ECEF;
-    eval_state.position_m = astroforces::core::eci_to_ecef_position(state.position_m, state.epoch.utc_seconds);
-    eval_state.velocity_mps =
-        astroforces::core::eci_to_ecef_velocity(state.position_m, state.velocity_mps, state.epoch.utc_seconds);
+    eval_state.position_m = astroforces::core::eci_to_ecef_position(state.position_m, get_frame_ctx());
+    eval_state.velocity_mps = astroforces::core::eci_to_ecef_velocity(state.position_m, state.velocity_mps, get_frame_ctx());
   }
 
   const auto a = atmosphere_.evaluate(eval_state, w);
@@ -61,8 +68,8 @@ DragResult DragAccelerationModel::evaluate(const astroforces::core::StateVector&
     if (wind.frame == astroforces::core::Frame::ECEF) {
       wind_state_mps = wind.velocity_mps;
     } else if (wind.frame == astroforces::core::Frame::ECI) {
-      const auto r_eci = astroforces::core::ecef_to_eci_position(eval_state.position_m, state.epoch.utc_seconds);
-      wind_state_mps = astroforces::core::eci_to_ecef_velocity(r_eci, wind.velocity_mps, state.epoch.utc_seconds);
+      const auto r_eci = astroforces::core::ecef_to_eci_position(eval_state.position_m, get_frame_ctx());
+      wind_state_mps = astroforces::core::eci_to_ecef_velocity(r_eci, wind.velocity_mps, get_frame_ctx());
     } else {
       return DragResult{.status = astroforces::core::Status::InvalidInput};
     }
@@ -70,8 +77,7 @@ DragResult DragAccelerationModel::evaluate(const astroforces::core::StateVector&
     if (wind.frame == astroforces::core::Frame::ECI) {
       wind_state_mps = wind.velocity_mps;
     } else if (wind.frame == astroforces::core::Frame::ECEF) {
-      wind_state_mps =
-          astroforces::core::ecef_to_eci_velocity(eval_state.position_m, wind.velocity_mps, state.epoch.utc_seconds);
+      wind_state_mps = astroforces::core::ecef_to_eci_velocity(eval_state.position_m, wind.velocity_mps, get_frame_ctx());
     } else {
       return DragResult{.status = astroforces::core::Status::InvalidInput};
     }
