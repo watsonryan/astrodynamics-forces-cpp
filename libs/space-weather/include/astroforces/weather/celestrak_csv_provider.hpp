@@ -10,7 +10,7 @@
 #include <memory>
 #include <vector>
 
-#include "astroforces/atmo/interfaces.hpp"
+#include "astroforces/core/interfaces.hpp"
 
 namespace astroforces::weather {
 

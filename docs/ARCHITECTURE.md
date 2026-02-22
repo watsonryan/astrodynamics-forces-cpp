@@ -3,7 +3,7 @@
 ## System View
 ```mermaid
 flowchart LR
-  A[atmo-core] --> B[space-weather]
+  A[core] --> B[space-weather]
   A --> C[sc-props]
   A --> D[adapters]
   A --> E[forces-core]
@@ -30,7 +30,7 @@ flowchart LR
 ```
 
 ## Modules
-- `atmo-core`: canonical types and interfaces
+- `core`: canonical types and interfaces
 - `space-weather`: providers for F10.7/Ap/Kp and related inputs
 - `models-basic`: temporary baseline models for integration tests
 - `adapters`: integration seam for NRLMSIS/DTM/HWM wrappers

@@ -9,7 +9,7 @@
 #include <cmath>
 
 #include "astroforces/core/transforms.hpp"
-#include "astroforces/atmo/constants.hpp"
+#include "astroforces/core/constants.hpp"
 #include "jpl_eph/jpl_eph.hpp"
 
 namespace astroforces::forces {

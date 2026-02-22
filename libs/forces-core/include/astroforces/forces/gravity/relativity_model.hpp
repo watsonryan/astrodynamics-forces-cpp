@@ -9,8 +9,8 @@
 #include <filesystem>
 #include <memory>
 
-#include "astroforces/atmo/constants.hpp"
-#include "astroforces/atmo/types.hpp"
+#include "astroforces/core/constants.hpp"
+#include "astroforces/core/types.hpp"
 
 namespace jpl::eph {
 class Ephemeris;

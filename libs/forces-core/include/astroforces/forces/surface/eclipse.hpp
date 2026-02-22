@@ -9,8 +9,8 @@
 #include <cmath>
 #include <numbers>
 
-#include "astroforces/atmo/constants.hpp"
-#include "astroforces/atmo/types.hpp"
+#include "astroforces/core/constants.hpp"
+#include "astroforces/core/types.hpp"
 
 namespace astroforces::forces {
 

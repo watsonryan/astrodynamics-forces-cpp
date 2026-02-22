@@ -8,7 +8,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "astroforces/atmo/constants.hpp"
+#include "astroforces/core/constants.hpp"
 #include "astroforces/forces/surface/earth_radiation/earth_radiation_model.hpp"
 
 namespace {

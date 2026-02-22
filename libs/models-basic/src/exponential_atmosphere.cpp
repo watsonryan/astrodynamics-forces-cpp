@@ -8,7 +8,7 @@
 
 #include <cmath>
 
-#include "astroforces/atmo/constants.hpp"
+#include "astroforces/core/constants.hpp"
 
 namespace astroforces::models {
 

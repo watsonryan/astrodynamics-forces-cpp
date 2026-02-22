@@ -20,7 +20,8 @@ int main() {
   using namespace astroforces::core;
 
   const double jd_utc = 2460737.5;  // 2025-03-16T00:00:00 UTC
-  const double jd_tt = jd_utc + 69.184 / astroforces::core::constants::kSecondsPerDay;
+  const double utc_seconds = (jd_utc - 2440587.5) * astroforces::core::constants::kSecondsPerDay;
+  const double jd_tt = utc_seconds_to_julian_date_tt(utc_seconds);
 
   const CelestialIntermediatePole cip{
       .x_rad = 0.2 * astroforces::core::constants::kArcsecToRad,

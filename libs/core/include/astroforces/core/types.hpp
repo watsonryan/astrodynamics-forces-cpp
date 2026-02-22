@@ -59,10 +59,25 @@ struct EarthOrientation {
   double dY_rad{};
 };
 
+struct EarthOrientationRate {
+  double xp_rad_s{};
+  double yp_rad_s{};
+  double dut1_s_s{};
+  double lod_s_s{};
+  double dX_rad_s{};
+  double dY_rad_s{};
+};
+
 struct CelestialIntermediatePole {
   double x_rad{};
   double y_rad{};
   double s_rad{};
+};
+
+struct CelestialIntermediatePoleRate {
+  double x_rad_s{};
+  double y_rad_s{};
+  double s_rad_s{};
 };
 
 struct WeatherIndices {
@@ -97,21 +112,3 @@ struct WindSample {
 };
 
 }  // namespace astroforces::core
-
-namespace astroforces {
-
-using Frame = core::Frame;
-using Status = core::Status;
-using WeatherSource = core::WeatherSource;
-using Vec3 = core::Vec3;
-using Epoch = core::Epoch;
-using StateVector = core::StateVector;
-using GeodeticPoint = core::GeodeticPoint;
-using WeatherIndices = core::WeatherIndices;
-using AtmosphereSample = core::AtmosphereSample;
-using WindSample = core::WindSample;
-
-inline double dot(const Vec3& a, const Vec3& b) { return core::dot(a, b); }
-inline double norm(const Vec3& v) { return core::norm(v); }
-
-}  // namespace astroforces

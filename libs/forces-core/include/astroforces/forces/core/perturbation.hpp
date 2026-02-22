@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "astroforces/atmo/types.hpp"
+#include "astroforces/core/types.hpp"
 #include "astroforces/sc/spacecraft.hpp"
 
 namespace astroforces::forces {

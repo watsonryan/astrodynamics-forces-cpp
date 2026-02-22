@@ -7,7 +7,7 @@
 
 #include <cmath>
 
-#include "astroforces/atmo/constants.hpp"
+#include "astroforces/core/constants.hpp"
 #include "astroforces/core/math_utils.hpp"
 
 namespace astroforces::core::sofa {
@@ -42,6 +42,39 @@ inline Mat3 rot_z(const double a) {
   m(0, 1) = s;
   m(1, 0) = -s;
   m(1, 1) = c;
+  return m;
+}
+
+inline Mat3 drot_x_da(const double a) {
+  Mat3 m{};
+  const double c = std::cos(a);
+  const double s = std::sin(a);
+  m(1, 1) = -s;
+  m(1, 2) = c;
+  m(2, 1) = -c;
+  m(2, 2) = -s;
+  return m;
+}
+
+inline Mat3 drot_y_da(const double a) {
+  Mat3 m{};
+  const double c = std::cos(a);
+  const double s = std::sin(a);
+  m(0, 0) = -s;
+  m(0, 2) = -c;
+  m(2, 0) = c;
+  m(2, 2) = -s;
+  return m;
+}
+
+inline Mat3 drot_z_da(const double a) {
+  Mat3 m{};
+  const double c = std::cos(a);
+  const double s = std::sin(a);
+  m(0, 0) = -s;
+  m(0, 1) = c;
+  m(1, 0) = -c;
+  m(1, 1) = -s;
   return m;
 }
 

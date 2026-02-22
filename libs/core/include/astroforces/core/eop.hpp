@@ -23,6 +23,11 @@ struct Record {
   bool predicted{};
 };
 
+struct Sample {
+  EarthOrientation value{};
+  EarthOrientationRate rate{};
+};
+
 class Series {
  public:
   static Series load_iers_finals(const std::filesystem::path& path) {
@@ -99,12 +104,92 @@ class Series {
     return out;
   }
 
+  [[nodiscard]] std::optional<Sample> sample_at_mjd_utc(double mjd_utc) const noexcept {
+    if (records_.empty()) {
+      return std::nullopt;
+    }
+    if (records_.size() == 1) {
+      return Sample{.value = records_.front().eop, .rate = {}};
+    }
+    if (mjd_utc <= records_.front().mjd_utc) {
+      const Record& r0 = records_.front();
+      const Record& r1 = records_[1];
+      const double dt_s = (r1.mjd_utc - r0.mjd_utc) * constants::kSecondsPerDay;
+      if (!(dt_s > 0.0)) {
+        return Sample{.value = r0.eop, .rate = {}};
+      }
+      return Sample{
+          .value = r0.eop,
+          .rate =
+              {
+                  .xp_rad_s = (r1.eop.xp_rad - r0.eop.xp_rad) / dt_s,
+                  .yp_rad_s = (r1.eop.yp_rad - r0.eop.yp_rad) / dt_s,
+                  .dut1_s_s = (r1.eop.dut1_s - r0.eop.dut1_s) / dt_s,
+                  .lod_s_s = (r1.eop.lod_s - r0.eop.lod_s) / dt_s,
+                  .dX_rad_s = (r1.eop.dX_rad - r0.eop.dX_rad) / dt_s,
+                  .dY_rad_s = (r1.eop.dY_rad - r0.eop.dY_rad) / dt_s,
+              }};
+    }
+    if (mjd_utc >= records_.back().mjd_utc) {
+      const Record& r1 = records_.back();
+      const Record& r0 = records_[records_.size() - 2];
+      const double dt_s = (r1.mjd_utc - r0.mjd_utc) * constants::kSecondsPerDay;
+      if (!(dt_s > 0.0)) {
+        return Sample{.value = r1.eop, .rate = {}};
+      }
+      return Sample{
+          .value = r1.eop,
+          .rate =
+              {
+                  .xp_rad_s = (r1.eop.xp_rad - r0.eop.xp_rad) / dt_s,
+                  .yp_rad_s = (r1.eop.yp_rad - r0.eop.yp_rad) / dt_s,
+                  .dut1_s_s = (r1.eop.dut1_s - r0.eop.dut1_s) / dt_s,
+                  .lod_s_s = (r1.eop.lod_s - r0.eop.lod_s) / dt_s,
+                  .dX_rad_s = (r1.eop.dX_rad - r0.eop.dX_rad) / dt_s,
+                  .dY_rad_s = (r1.eop.dY_rad - r0.eop.dY_rad) / dt_s,
+              }};
+    }
+
+    const auto it = std::lower_bound(records_.begin(), records_.end(), mjd_utc, [](const Record& r, const double key) {
+      return r.mjd_utc < key;
+    });
+    if (it == records_.end() || it == records_.begin()) {
+      return std::nullopt;
+    }
+    const Record& r1 = *it;
+    const Record& r0 = *(it - 1);
+    const double dt = r1.mjd_utc - r0.mjd_utc;
+    if (!(dt > 0.0)) {
+      return Sample{.value = r0.eop, .rate = {}};
+    }
+    const double alpha = (mjd_utc - r0.mjd_utc) / dt;
+    const double dt_s = dt * constants::kSecondsPerDay;
+    Sample out{};
+    out.value.xp_rad = r0.eop.xp_rad + alpha * (r1.eop.xp_rad - r0.eop.xp_rad);
+    out.value.yp_rad = r0.eop.yp_rad + alpha * (r1.eop.yp_rad - r0.eop.yp_rad);
+    out.value.dut1_s = r0.eop.dut1_s + alpha * (r1.eop.dut1_s - r0.eop.dut1_s);
+    out.value.lod_s = r0.eop.lod_s + alpha * (r1.eop.lod_s - r0.eop.lod_s);
+    out.value.dX_rad = r0.eop.dX_rad + alpha * (r1.eop.dX_rad - r0.eop.dX_rad);
+    out.value.dY_rad = r0.eop.dY_rad + alpha * (r1.eop.dY_rad - r0.eop.dY_rad);
+    out.rate.xp_rad_s = (r1.eop.xp_rad - r0.eop.xp_rad) / dt_s;
+    out.rate.yp_rad_s = (r1.eop.yp_rad - r0.eop.yp_rad) / dt_s;
+    out.rate.dut1_s_s = (r1.eop.dut1_s - r0.eop.dut1_s) / dt_s;
+    out.rate.lod_s_s = (r1.eop.lod_s - r0.eop.lod_s) / dt_s;
+    out.rate.dX_rad_s = (r1.eop.dX_rad - r0.eop.dX_rad) / dt_s;
+    out.rate.dY_rad_s = (r1.eop.dY_rad - r0.eop.dY_rad) / dt_s;
+    return out;
+  }
+
   [[nodiscard]] std::optional<EarthOrientation> at_jd_utc(double jd_utc) const noexcept {
     return at_mjd_utc(jd_utc - 2400000.5);
   }
 
   [[nodiscard]] std::optional<EarthOrientation> at_utc_seconds(double utc_seconds) const noexcept {
     return at_jd_utc(utc_seconds_to_julian_date_utc(utc_seconds));
+  }
+
+  [[nodiscard]] std::optional<Sample> sample_at_utc_seconds(double utc_seconds) const noexcept {
+    return sample_at_mjd_utc(utc_seconds_to_julian_date_utc(utc_seconds) - 2400000.5);
   }
 
  private:

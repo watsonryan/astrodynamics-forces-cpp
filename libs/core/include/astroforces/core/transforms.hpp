@@ -5,12 +5,14 @@
  */
 #pragma once
 
+#include <array>
+#include <algorithm>
 #include <cmath>
 #include <ctime>
 #include <utility>
 
-#include "astroforces/atmo/constants.hpp"
-#include "astroforces/atmo/types.hpp"
+#include "astroforces/core/constants.hpp"
+#include "astroforces/core/types.hpp"
 #include "astroforces/core/math_utils.hpp"
 #include "astroforces/core/sofa_utils.hpp"
 
@@ -62,6 +64,58 @@ inline double local_solar_time_hours(double utc_seconds, double lon_deg) {
 
 inline double utc_seconds_to_julian_date_utc(double utc_seconds) {
   return utc_seconds / constants::kSecondsPerDay + 2440587.5;
+}
+
+inline double tai_minus_utc_seconds(const double utc_seconds) {
+  // Leap-second epochs (UTC) and resulting TAI-UTC seconds.
+  constexpr std::array<std::pair<double, double>, 28> kLeapTable{{
+      {63072000.0, 10.0},     // 1972-01-01
+      {78796800.0, 11.0},     // 1972-07-01
+      {94694400.0, 12.0},     // 1973-01-01
+      {126230400.0, 13.0},    // 1974-01-01
+      {157766400.0, 14.0},    // 1975-01-01
+      {189302400.0, 15.0},    // 1976-01-01
+      {220924800.0, 16.0},    // 1977-01-01
+      {252460800.0, 17.0},    // 1978-01-01
+      {283996800.0, 18.0},    // 1979-01-01
+      {315532800.0, 19.0},    // 1980-01-01
+      {362793600.0, 20.0},    // 1981-07-01
+      {394329600.0, 21.0},    // 1982-07-01
+      {425865600.0, 22.0},    // 1983-07-01
+      {489024000.0, 23.0},    // 1985-07-01
+      {567993600.0, 24.0},    // 1988-01-01
+      {631152000.0, 25.0},    // 1990-01-01
+      {662688000.0, 26.0},    // 1991-01-01
+      {709948800.0, 27.0},    // 1992-07-01
+      {741484800.0, 28.0},    // 1993-07-01
+      {773020800.0, 29.0},    // 1994-07-01
+      {820454400.0, 30.0},    // 1996-01-01
+      {867715200.0, 31.0},    // 1997-07-01
+      {915148800.0, 32.0},    // 1999-01-01
+      {1136073600.0, 33.0},   // 2006-01-01
+      {1230768000.0, 34.0},   // 2009-01-01
+      {1341100800.0, 35.0},   // 2012-07-01
+      {1435708800.0, 36.0},   // 2015-07-01
+      {1483228800.0, 37.0},   // 2017-01-01
+  }};
+
+  double tai_utc = 10.0;
+  for (const auto& [epoch_utc_s, delta] : kLeapTable) {
+    if (utc_seconds >= epoch_utc_s) {
+      tai_utc = delta;
+    } else {
+      break;
+    }
+  }
+  return tai_utc;
+}
+
+inline double tt_minus_utc_seconds(const double utc_seconds) {
+  return tai_minus_utc_seconds(utc_seconds) + 32.184;
+}
+
+inline double utc_seconds_to_julian_date_tt(const double utc_seconds) {
+  return utc_seconds_to_julian_date_utc(utc_seconds) + tt_minus_utc_seconds(utc_seconds) / constants::kSecondsPerDay;
 }
 
 inline double earth_rotation_angle_rad(double jd_ut1) {
@@ -126,7 +180,27 @@ inline Mat3 polar_motion_matrix(const EarthOrientation& eop, const double sp_rad
   return sofa::pom00(eop.xp_rad, eop.yp_rad, sp_rad);
 }
 
-inline RotationWithDerivative gcrf_to_itrf_rotation_with_derivative(
+inline Mat3 mat_add(const Mat3& a, const Mat3& b) {
+  Mat3 c{};
+  for (int i = 0; i < 9; ++i) {
+    c.v[static_cast<std::size_t>(i)] = a.v[static_cast<std::size_t>(i)] + b.v[static_cast<std::size_t>(i)];
+  }
+  return c;
+}
+
+inline Mat3 mat_scale(double s, const Mat3& a) {
+  Mat3 c{};
+  for (int i = 0; i < 9; ++i) {
+    c.v[static_cast<std::size_t>(i)] = s * a.v[static_cast<std::size_t>(i)];
+  }
+  return c;
+}
+
+inline double tio_locator_sp_rate_rad_s() {
+  return (-47e-6 * constants::kArcsecToRad) / (36525.0 * constants::kSecondsPerDay);
+}
+
+inline Mat3 gcrf_to_itrf_rotation(
     const double jd_utc,
     const double jd_tt,
     const CelestialIntermediatePole& cip,
@@ -135,26 +209,87 @@ inline RotationWithDerivative gcrf_to_itrf_rotation_with_derivative(
   CelestialIntermediatePole corrected = cip;
   corrected.x_rad += eop.dX_rad;
   corrected.y_rad += eop.dY_rad;
-
   const Mat3 rc2i = c2i_from_xys(corrected);
   const double era = earth_rotation_angle_rad(jd_ut1);
-  const Mat3 r3era = sofa::rot_z(era);
   const Mat3 rpom = polar_motion_matrix(eop, tio_locator_sp_rad(jd_tt));
+  return sofa::c2tcio(rc2i, era, rpom);
+}
 
+inline RotationWithDerivative gcrf_to_itrf_rotation_with_derivative_exact(
+    const double jd_utc,
+    const double jd_tt,
+    const CelestialIntermediatePole& cip,
+    const CelestialIntermediatePoleRate& cip_rate,
+    const EarthOrientation& eop,
+    const EarthOrientationRate& eop_rate) {
+  const double x = cip.x_rad + eop.dX_rad;
+  const double y = cip.y_rad + eop.dY_rad;
+  const double x_dot = cip_rate.x_rad_s + eop_rate.dX_rad_s;
+  const double y_dot = cip_rate.y_rad_s + eop_rate.dY_rad_s;
+  const double s_cio = cip.s_rad;
+  const double s_dot = cip_rate.s_rad_s;
+
+  const double r2 = x * x + y * y;
+  const double r = (r2 > 0.0) ? std::sqrt(r2) : 0.0;
+  const double e = (r2 > 0.0) ? std::atan2(y, x) : 0.0;
+  const double e_dot = (r2 > 0.0) ? ((x * y_dot - y * x_dot) / r2) : 0.0;
+  const double r_dot = (r > 0.0) ? ((x * x_dot + y * y_dot) / r) : 0.0;
+  const double d = (r > 0.0) ? std::asin(r) : 0.0;
+  const double d_dot = (r > 0.0) ? (r_dot / std::sqrt(std::max(1e-30, 1.0 - r2))) : 0.0;
+
+  const double a1 = -(e + s_cio);
+  const double a2 = d;
+  const double a3 = e;
+  const double a1_dot = -(e_dot + s_dot);
+  const double a2_dot = d_dot;
+  const double a3_dot = e_dot;
+
+  const Mat3 rz1 = sofa::rot_z(a1);
+  const Mat3 ry2 = sofa::rot_y(a2);
+  const Mat3 rz3 = sofa::rot_z(a3);
+  const Mat3 drz1 = mat_scale(a1_dot, sofa::drot_z_da(a1));
+  const Mat3 dry2 = mat_scale(a2_dot, sofa::drot_y_da(a2));
+  const Mat3 drz3 = mat_scale(a3_dot, sofa::drot_z_da(a3));
+
+  const Mat3 rc2i = mat_mul(rz1, mat_mul(ry2, rz3));
+  const Mat3 drc2i = mat_add(
+      mat_mul(drz1, mat_mul(ry2, rz3)),
+      mat_add(mat_mul(rz1, mat_mul(dry2, rz3)), mat_mul(rz1, mat_mul(ry2, drz3))));
+
+  const double jd_ut1 = jd_utc + eop.dut1_s / constants::kSecondsPerDay;
+  const double era = earth_rotation_angle_rad(jd_ut1);
   const double omega = constants::kEarthRotationRateRadPerSec / (1.0 + eop.lod_s / constants::kSecondsPerDay);
-  Mat3 s{};
-  s(0, 1) = 1.0;
-  s(1, 0) = -1.0;
-  const Mat3 dr3 = mat_mul(s, r3era);
-  Mat3 dr3_scaled{};
-  for (int i = 0; i < 9; ++i) {
-    dr3_scaled.v[static_cast<std::size_t>(i)] = omega * dr3.v[static_cast<std::size_t>(i)];
-  }
+  const Mat3 r3era = sofa::rot_z(era);
+  const Mat3 dr3era = mat_scale(omega, sofa::drot_z_da(era));
+
+  const double sp = tio_locator_sp_rad(jd_tt);
+  const double sp_dot = tio_locator_sp_rate_rad_s();
+  const Mat3 rzp = sofa::rot_z(sp);
+  const Mat3 ryp = sofa::rot_y(-eop.xp_rad);
+  const Mat3 rxp = sofa::rot_x(-eop.yp_rad);
+  const Mat3 drzp = mat_scale(sp_dot, sofa::drot_z_da(sp));
+  const Mat3 dryp = mat_scale(-eop_rate.xp_rad_s, sofa::drot_y_da(-eop.xp_rad));
+  const Mat3 drxp = mat_scale(-eop_rate.yp_rad_s, sofa::drot_x_da(-eop.yp_rad));
+
+  const Mat3 rpom = mat_mul(rzp, mat_mul(ryp, rxp));
+  const Mat3 drpom = mat_add(
+      mat_mul(drzp, mat_mul(ryp, rxp)),
+      mat_add(mat_mul(rzp, mat_mul(dryp, rxp)), mat_mul(rzp, mat_mul(ryp, drxp))));
 
   RotationWithDerivative out{};
-  out.r = sofa::c2tcio(rc2i, era, rpom);
-  out.dr = mat_mul(rpom, mat_mul(dr3_scaled, rc2i));
+  out.r = mat_mul(rpom, mat_mul(r3era, rc2i));
+  out.dr = mat_add(
+      mat_mul(drpom, mat_mul(r3era, rc2i)),
+      mat_add(mat_mul(rpom, mat_mul(dr3era, rc2i)), mat_mul(rpom, mat_mul(r3era, drc2i))));
   return out;
+}
+
+inline RotationWithDerivative gcrf_to_itrf_rotation_with_derivative(
+    const double jd_utc,
+    const double jd_tt,
+    const CelestialIntermediatePole& cip,
+    const EarthOrientation& eop) {
+  return gcrf_to_itrf_rotation_with_derivative_exact(jd_utc, jd_tt, cip, CelestialIntermediatePoleRate{}, eop, EarthOrientationRate{});
 }
 
 inline Vec3 gcrf_to_itrf_position(

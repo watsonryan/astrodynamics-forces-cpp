@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#include "astroforces/atmo/constants.hpp"
+#include "astroforces/core/constants.hpp"
 
 namespace astroforces::forces::tides {
 namespace {

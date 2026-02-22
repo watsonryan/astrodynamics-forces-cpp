@@ -5,7 +5,7 @@
  */
 #pragma once
 
-#include "astroforces/atmo/types.hpp"
+#include "astroforces/core/types.hpp"
 
 namespace astroforces::core {
 

@@ -8,8 +8,8 @@
 #include <filesystem>
 #include <memory>
 
-#include "astroforces/atmo/constants.hpp"
-#include "astroforces/atmo/types.hpp"
+#include "astroforces/core/constants.hpp"
+#include "astroforces/core/types.hpp"
 #include "astroforces/core/cip.hpp"
 #include "astroforces/core/eop.hpp"
 
@@ -65,7 +65,6 @@ class GravitySphAccelerationModel final {
     bool use_ocean_tide{false};
     bool use_atmos_tide{false};
     bool use_aod{false};
-    bool use_simple_eci_to_ecef{false};
     double mu_earth_m3_s2{0.0};
     double earth_equatorial_radius_m{0.0};
     double mu_sun_m3_s2{astroforces::core::constants::kSunMuM3S2};

@@ -23,9 +23,9 @@ void print_vec(const char* key, const astroforces::core::Vec3& v) {
 void print_usage() {
   spdlog::error(
       "usage:\n"
-      "  frame_transform_cli simple <utc_s> <rx_eci_m> <ry_eci_m> <rz_eci_m> <vx_eci_mps> <vy_eci_mps> <vz_eci_mps>\n"
       "  frame_transform_cli gcrf_to_itrf <jd_utc> <jd_tt> <cip_x_rad> <cip_y_rad> <cip_s_rad> <xp_rad> <yp_rad> <dut1_s> "
-      "<lod_s> <dX_rad> <dY_rad> <rx_gcrf_m> <ry_gcrf_m> <rz_gcrf_m> <vx_gcrf_mps> <vy_gcrf_mps> <vz_gcrf_mps>");
+      "<lod_s> <dX_rad> <dY_rad> <rx_gcrf_m> <ry_gcrf_m> <rz_gcrf_m> <vx_gcrf_mps> <vy_gcrf_mps> <vz_gcrf_mps> "
+      "[cip_x_dot_rad_s] [cip_y_dot_rad_s] [cip_s_dot_rad_s] [xp_dot_rad_s] [yp_dot_rad_s] [dX_dot_rad_s] [dY_dot_rad_s]");
 }
 
 }  // namespace
@@ -37,31 +37,8 @@ int main(int argc, char** argv) {
   }
 
   const std::string mode = argv[1];
-  if (mode == "simple") {
-    if (argc != 9) {
-      print_usage();
-      return 2;
-    }
-    const double utc_s = parse_double(argv[2]);
-    const astroforces::core::Vec3 r_eci{
-        parse_double(argv[3]), parse_double(argv[4]), parse_double(argv[5])};
-    const astroforces::core::Vec3 v_eci{
-        parse_double(argv[6]), parse_double(argv[7]), parse_double(argv[8])};
-
-    const auto r_ecef = astroforces::core::eci_to_ecef_position(r_eci, utc_s);
-    const auto v_ecef = astroforces::core::eci_to_ecef_velocity(r_eci, v_eci, utc_s);
-    const auto r_eci_back = astroforces::core::ecef_to_eci_position(r_ecef, utc_s);
-    const auto v_eci_back = astroforces::core::ecef_to_eci_velocity(r_ecef, v_ecef, utc_s);
-
-    print_vec("r_ecef_m", r_ecef);
-    print_vec("v_ecef_mps", v_ecef);
-    print_vec("r_eci_back_m", r_eci_back);
-    print_vec("v_eci_back_mps", v_eci_back);
-    return 0;
-  }
-
   if (mode == "gcrf_to_itrf") {
-    if (argc != 19) {
+    if (argc != 19 && argc != 26) {
       print_usage();
       return 3;
     }
@@ -80,16 +57,35 @@ int main(int argc, char** argv) {
     eop.lod_s = parse_double(argv[10]);
     eop.dX_rad = parse_double(argv[11]);
     eop.dY_rad = parse_double(argv[12]);
+    astroforces::core::CelestialIntermediatePoleRate cip_rate{};
+    astroforces::core::EarthOrientationRate eop_rate{};
+    const bool have_rates = (argc == 26);
+    if (have_rates) {
+      cip_rate.x_rad_s = parse_double(argv[19]);
+      cip_rate.y_rad_s = parse_double(argv[20]);
+      cip_rate.s_rad_s = parse_double(argv[21]);
+      eop_rate.xp_rad_s = parse_double(argv[22]);
+      eop_rate.yp_rad_s = parse_double(argv[23]);
+      eop_rate.dX_rad_s = parse_double(argv[24]);
+      eop_rate.dY_rad_s = parse_double(argv[25]);
+    }
 
     const astroforces::core::Vec3 r_gcrf{
         parse_double(argv[13]), parse_double(argv[14]), parse_double(argv[15])};
     const astroforces::core::Vec3 v_gcrf{
         parse_double(argv[16]), parse_double(argv[17]), parse_double(argv[18])};
 
-    const auto r_itrf = astroforces::core::gcrf_to_itrf_position(r_gcrf, jd_utc, jd_tt, cip, eop);
-    const auto v_itrf = astroforces::core::gcrf_to_itrf_velocity(r_gcrf, v_gcrf, jd_utc, jd_tt, cip, eop);
-    const auto r_gcrf_back = astroforces::core::itrf_to_gcrf_position(r_itrf, jd_utc, jd_tt, cip, eop);
-    const auto v_gcrf_back = astroforces::core::itrf_to_gcrf_velocity(r_itrf, v_itrf, jd_utc, jd_tt, cip, eop);
+    astroforces::core::RotationWithDerivative rd{};
+    if (have_rates) {
+      rd = astroforces::core::gcrf_to_itrf_rotation_with_derivative_exact(jd_utc, jd_tt, cip, cip_rate, eop, eop_rate);
+    } else {
+      rd = astroforces::core::gcrf_to_itrf_rotation_with_derivative(jd_utc, jd_tt, cip, eop);
+    }
+    const auto r_itrf = astroforces::core::mat_vec(rd.r, r_gcrf);
+    const auto v_itrf = astroforces::core::mat_vec(rd.r, v_gcrf) + astroforces::core::mat_vec(rd.dr, r_gcrf);
+    const auto rt = astroforces::core::mat_transpose(rd.r);
+    const auto r_gcrf_back = astroforces::core::mat_vec(rt, r_itrf);
+    const auto v_gcrf_back = astroforces::core::mat_vec(rt, v_itrf - astroforces::core::mat_vec(rd.dr, r_gcrf_back));
 
     print_vec("r_itrf_m", r_itrf);
     print_vec("v_itrf_mps", v_itrf);

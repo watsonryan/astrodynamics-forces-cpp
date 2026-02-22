@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "astroforces/atmo/types.hpp"
+#include "astroforces/core/types.hpp"
 
 namespace astroforces::sc {
 

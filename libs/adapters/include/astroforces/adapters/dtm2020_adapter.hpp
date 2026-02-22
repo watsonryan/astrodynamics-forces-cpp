@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <memory>
 
-#include "astroforces/atmo/interfaces.hpp"
+#include "astroforces/core/interfaces.hpp"
 
 namespace dtm2020 {
 class Dtm2020Operational;

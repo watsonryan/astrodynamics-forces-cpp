@@ -5,7 +5,7 @@ Unified C++20 astrodynamics perturbation modeling platform.
 ## Architecture
 ```mermaid
 flowchart LR
-  A[atmo-core<br/>types, frames, interfaces] --> B[space-weather<br/>CelesTrak CSV]
+  A[core<br/>types, frames, interfaces] --> B[space-weather<br/>CelesTrak CSV]
   A --> C[sc-props<br/>cannonball + macro surfaces]
   A --> D[adapters<br/>NRLMSIS / DTM2020 / HWM14]
   A --> E[forces-core<br/>Drag/Antenna Thrust/Gravity/Earth Radiation/SRP/Relativity/Third-Body]

@@ -135,10 +135,11 @@ int main() {
 
   state.frame = astroforces::core::Frame::ECI;
   const auto out_eci = full_sph->evaluate(state);
-  if (out_eci.status != astroforces::core::Status::Ok || !finite_vec(out_eci.acceleration_mps2)) {
-    spdlog::error("eci evaluation failed");
+  if (out_eci.status != astroforces::core::Status::DataUnavailable) {
+    spdlog::error("eci evaluation without EOP/CIP data should be unavailable");
     return 4;
   }
+  state.frame = astroforces::core::Frame::ECEF;
 
   if (fs::exists(eph_path)) {
     const auto no_tides = astroforces::forces::GravitySphAccelerationModel::Create(

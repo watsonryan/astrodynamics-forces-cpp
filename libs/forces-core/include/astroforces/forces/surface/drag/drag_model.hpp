@@ -5,7 +5,7 @@
  */
 #pragma once
 
-#include "astroforces/atmo/interfaces.hpp"
+#include "astroforces/core/interfaces.hpp"
 #include "astroforces/sc/spacecraft.hpp"
 
 namespace astroforces::forces {

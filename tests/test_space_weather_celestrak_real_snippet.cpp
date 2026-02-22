@@ -9,7 +9,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "astroforces/atmo/types.hpp"
+#include "astroforces/core/types.hpp"
 #include "astroforces/weather/celestrak_csv_provider.hpp"
 
 namespace {

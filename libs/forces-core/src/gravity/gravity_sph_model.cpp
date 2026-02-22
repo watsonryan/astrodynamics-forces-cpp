@@ -476,10 +476,6 @@ double gmst_rad_from_jd_utc(double jd_utc) {
   return (gmst_wrapped < 0.0 ? gmst_wrapped + 360.0 : gmst_wrapped) * kPi / 180.0;
 }
 
-astroforces::core::Vec3 rot_z_cs(double c, double s, const astroforces::core::Vec3& v) {
-  return astroforces::core::Vec3{c * v.x + s * v.y, -s * v.x + c * v.y, v.z};
-}
-
 bool finite_vec(const astroforces::core::Vec3& v) {
   return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
 }
@@ -558,15 +554,16 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
   }
 
   const double jd_utc = astroforces::core::utc_seconds_to_julian_date_utc(state.epoch.utc_seconds);
-  constexpr double kApproxTtMinusUtcSeconds = 69.184;
-  const double jd_tt = jd_utc + kApproxTtMinusUtcSeconds / astroforces::core::constants::kSecondsPerDay;
+  const double jd_tt = astroforces::core::utc_seconds_to_julian_date_tt(state.epoch.utc_seconds);
   const double mjd_tt = jd_tt - 2400000.5;
 
-  const bool strict_transform = (state.frame == astroforces::core::Frame::ECI) && !config_.use_simple_eci_to_ecef;
+  const bool need_itrf_gcrf_transform
+      = (state.frame == astroforces::core::Frame::ECI)
+        || (config_.use_solid_earth_tides && (config_.use_sun_tide || config_.use_moon_tide));
   astroforces::core::RotationWithDerivative strict_rd{};
-  if (strict_transform) {
+  if (need_itrf_gcrf_transform) {
     if (!eop_ || !cip_) {
-      return GravitySphResult{.status = astroforces::core::Status::InvalidInput};
+      return GravitySphResult{.status = astroforces::core::Status::DataUnavailable};
     }
     const auto eop_now = eop_->sample_at_utc_seconds(state.epoch.utc_seconds);
     const auto cip_now = cip_->sample_at_utc_seconds(state.epoch.utc_seconds);
@@ -577,32 +574,24 @@ GravitySphResult GravitySphAccelerationModel::evaluate(const astroforces::core::
         jd_utc, jd_tt, cip_now->value, cip_now->rate, eop_now->value, eop_now->rate);
   }
 
-  const bool needs_gmst = (state.frame == astroforces::core::Frame::ECI)
-                          || (config_.use_solid_earth_tides && (config_.use_sun_tide || config_.use_moon_tide || config_.use_solid_earth_tide2))
-                          || config_.use_ocean_tide || config_.use_atmos_tide;
+  const bool needs_gmst = config_.use_solid_earth_tide2 || config_.use_ocean_tide || config_.use_atmos_tide;
   const double gmst = needs_gmst ? gmst_rad_from_jd_utc(jd_utc) : 0.0;
-  const double gmst_c = needs_gmst ? std::cos(gmst) : 1.0;
-  const double gmst_s = needs_gmst ? std::sin(gmst) : 0.0;
 
   astroforces::core::Vec3 r_ecef = state.position_m;
   if (state.frame == astroforces::core::Frame::ECI) {
-    if (strict_transform) {
-      r_ecef = astroforces::core::mat_vec(strict_rd.r, state.position_m);
-    } else {
-      r_ecef = rot_z_cs(gmst_c, gmst_s, state.position_m);
-    }
+    r_ecef = astroforces::core::mat_vec(strict_rd.r, state.position_m);
   }
   const auto gcrf_to_itrf_vec = [&](const astroforces::core::Vec3& v) -> astroforces::core::Vec3 {
-    if (strict_transform) {
+    if (need_itrf_gcrf_transform) {
       return astroforces::core::mat_vec(strict_rd.r, v);
     }
-    return rot_z_cs(gmst_c, gmst_s, v);
+    return v;
   };
   const auto itrf_to_gcrf_vec = [&](const astroforces::core::Vec3& v) -> astroforces::core::Vec3 {
-    if (strict_transform) {
+    if (need_itrf_gcrf_transform) {
       return astroforces::core::mat_vec(astroforces::core::mat_transpose(strict_rd.r), v);
     }
-    return rot_z_cs(gmst_c, -gmst_s, v);
+    return v;
   };
 
   GravitySphResult out{};

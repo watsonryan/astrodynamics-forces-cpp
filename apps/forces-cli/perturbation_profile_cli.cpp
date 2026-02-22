@@ -17,7 +17,7 @@
 
 #include "astroforces/adapters/dtm2020_adapter.hpp"
 #include "astroforces/core/transforms.hpp"
-#include "astroforces/atmo/constants.hpp"
+#include "astroforces/core/constants.hpp"
 #include "astroforces/forces/surface/antenna_thrust/antenna_thrust_perturbation.hpp"
 #include "astroforces/forces/surface/drag/drag_perturbation.hpp"
 #include "astroforces/forces/surface/earth_radiation/earth_radiation_perturbation.hpp"
