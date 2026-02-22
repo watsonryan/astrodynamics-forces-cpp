@@ -8,12 +8,21 @@
 
 #include <cmath>
 
-#include <Eigen/Dense>
-
 #include "astroforces/core/transforms.hpp"
 #include "astroforces/forces/surface/surface_force.hpp"
 
 namespace astroforces::forces {
+namespace {
+
+astroforces::core::Vec3 body_from_frame_mul(const std::array<double, 9>& dcm, const astroforces::core::Vec3& v) {
+  return astroforces::core::Vec3{
+      dcm[0] * v.x + dcm[1] * v.y + dcm[2] * v.z,
+      dcm[3] * v.x + dcm[4] * v.y + dcm[5] * v.z,
+      dcm[6] * v.x + dcm[7] * v.y + dcm[8] * v.z,
+  };
+}
+
+}  // namespace
 
 DragResult DragAccelerationModel::evaluate(const astroforces::core::StateVector& state,
                                            const astroforces::sc::SpacecraftProperties& sc) const {
@@ -77,10 +86,7 @@ DragResult DragAccelerationModel::evaluate(const astroforces::core::StateVector&
 
   astroforces::core::Vec3 flow_dir_body{};
   if (speed > 0.0) {
-    const Eigen::Vector3d flow_frame(flow_dir_frame.x, flow_dir_frame.y, flow_dir_frame.z);
-    const Eigen::Map<const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> body_from_frame(state.body_from_frame_dcm.data());
-    const Eigen::Vector3d flow_body = body_from_frame * flow_frame;
-    flow_dir_body = astroforces::core::Vec3{flow_body.x(), flow_body.y(), flow_body.z()};
+    flow_dir_body = body_from_frame_mul(state.body_from_frame_dcm, flow_dir_frame);
   }
 
   const double q_pa = 0.5 * a.density_kg_m3 * speed * speed;
