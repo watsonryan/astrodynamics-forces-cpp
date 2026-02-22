@@ -228,6 +228,8 @@ inline RotationWithDerivative gcrf_to_itrf_rotation_with_derivative_exact(
   const double y_dot = cip_rate.y_rad_s + eop_rate.dY_rad_s;
   const double s_cio = cip.s_rad;
   const double s_dot = cip_rate.s_rad_s;
+  const bool cip_rate_zero = (x_dot == 0.0) && (y_dot == 0.0) && (s_dot == 0.0);
+  const bool pm_rate_zero = (eop_rate.xp_rad_s == 0.0) && (eop_rate.yp_rad_s == 0.0);
 
   const double r2 = x * x + y * y;
   const double r = (r2 > 0.0) ? std::sqrt(r2) : 0.0;
@@ -251,10 +253,15 @@ inline RotationWithDerivative gcrf_to_itrf_rotation_with_derivative_exact(
   const Mat3 dry2 = mat_scale(a2_dot, sofa::drot_y_da(a2));
   const Mat3 drz3 = mat_scale(a3_dot, sofa::drot_z_da(a3));
 
-  const Mat3 rc2i = mat_mul(rz1, mat_mul(ry2, rz3));
-  const Mat3 drc2i = mat_add(
-      mat_mul(drz1, mat_mul(ry2, rz3)),
-      mat_add(mat_mul(rz1, mat_mul(dry2, rz3)), mat_mul(rz1, mat_mul(ry2, drz3))));
+  const Mat3 ry2_rz3 = mat_mul(ry2, rz3);
+  const Mat3 rc2i = mat_mul(rz1, ry2_rz3);
+  Mat3 drc2i{};
+  if (!cip_rate_zero) {
+    const Mat3 t_drc2i_1 = mat_mul(drz1, ry2_rz3);
+    const Mat3 t_drc2i_2 = mat_mul(rz1, mat_mul(dry2, rz3));
+    const Mat3 t_drc2i_3 = mat_mul(rz1, mat_mul(ry2, drz3));
+    drc2i = mat_add(t_drc2i_1, mat_add(t_drc2i_2, t_drc2i_3));
+  }
 
   const double jd_ut1 = jd_utc + eop.dut1_s / constants::kSecondsPerDay;
   const double era = earth_rotation_angle_rad(jd_ut1);
@@ -271,16 +278,26 @@ inline RotationWithDerivative gcrf_to_itrf_rotation_with_derivative_exact(
   const Mat3 dryp = mat_scale(-eop_rate.xp_rad_s, sofa::drot_y_da(-eop.xp_rad));
   const Mat3 drxp = mat_scale(-eop_rate.yp_rad_s, sofa::drot_x_da(-eop.yp_rad));
 
-  const Mat3 rpom = mat_mul(rzp, mat_mul(ryp, rxp));
-  const Mat3 drpom = mat_add(
-      mat_mul(drzp, mat_mul(ryp, rxp)),
-      mat_add(mat_mul(rzp, mat_mul(dryp, rxp)), mat_mul(rzp, mat_mul(ryp, drxp))));
+  const Mat3 ryp_rxp = mat_mul(ryp, rxp);
+  const Mat3 rpom = mat_mul(rzp, ryp_rxp);
+  const Mat3 t_drpom_1 = mat_mul(drzp, ryp_rxp);
+  Mat3 drpom = t_drpom_1;
+  if (!pm_rate_zero) {
+    const Mat3 t_drpom_2 = mat_mul(rzp, mat_mul(dryp, rxp));
+    const Mat3 t_drpom_3 = mat_mul(rzp, mat_mul(ryp, drxp));
+    drpom = mat_add(t_drpom_1, mat_add(t_drpom_2, t_drpom_3));
+  }
 
   RotationWithDerivative out{};
-  out.r = mat_mul(rpom, mat_mul(r3era, rc2i));
-  out.dr = mat_add(
-      mat_mul(drpom, mat_mul(r3era, rc2i)),
-      mat_add(mat_mul(rpom, mat_mul(dr3era, rc2i)), mat_mul(rpom, mat_mul(r3era, drc2i))));
+  const Mat3 r3era_rc2i = mat_mul(r3era, rc2i);
+  out.r = mat_mul(rpom, r3era_rc2i);
+  const Mat3 t_dr_1 = mat_mul(drpom, r3era_rc2i);
+  const Mat3 t_dr_2 = mat_mul(rpom, mat_mul(dr3era, rc2i));
+  out.dr = mat_add(t_dr_1, t_dr_2);
+  if (!cip_rate_zero) {
+    const Mat3 t_dr_3 = mat_mul(rpom, mat_mul(r3era, drc2i));
+    out.dr = mat_add(out.dr, t_dr_3);
+  }
   return out;
 }
 
