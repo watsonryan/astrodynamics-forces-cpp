@@ -10,7 +10,7 @@
 #include "astroforces/forces/surface/erp/erp_model.hpp"
 #include "astroforces/forces/core/perturbation.hpp"
 
-namespace astroforces::erp {
+namespace astroforces::forces {
 
 class ErpPerturbationModel final : public astroforces::forces::IPerturbationModel {
  public:
@@ -28,5 +28,5 @@ class ErpPerturbationModel final : public astroforces::forces::IPerturbationMode
   std::string name_{};
 };
 
-}  // namespace astroforces::erp
+}  // namespace astroforces::forces
 

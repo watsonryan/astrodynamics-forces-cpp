@@ -6,7 +6,7 @@
 
 #include "astroforces/forces/surface/srp/srp_perturbation.hpp"
 
-namespace astroforces::srp {
+namespace astroforces::forces {
 
 astroforces::forces::PerturbationContribution SrpPerturbationModel::evaluate(
     const astroforces::forces::PerturbationRequest& request) const {
@@ -31,5 +31,5 @@ astroforces::forces::PerturbationContribution SrpPerturbationModel::evaluate(
   return out;
 }
 
-}  // namespace astroforces::srp
+}  // namespace astroforces::forces
 

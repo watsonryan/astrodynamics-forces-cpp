@@ -29,7 +29,7 @@ int main() {
   weather::StaticSpaceWeatherProvider weather(wx);
   models::ExponentialAtmosphereModel atmosphere(1.225, 0.0, 7000.0, 1000.0);
   models::ZeroWindModel wind;
-  drag::DragAccelerationModel model(weather, atmosphere, wind);
+  forces::DragAccelerationModel model(weather, atmosphere, wind);
 
   core::StateVector state{};
   state.frame = core::Frame::ECI;

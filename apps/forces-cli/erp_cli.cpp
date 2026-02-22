@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
   astroforces::sc::SpacecraftProperties sc{
       .mass_kg = mass_kg, .reference_area_m2 = area_m2, .cd = 2.2, .cr = cr, .use_surface_model = false, .surfaces = {}};
 
-  const astroforces::erp::ErpAccelerationModel erp{};
+  const astroforces::forces::ErpAccelerationModel erp{};
   const auto out = erp.evaluate(state, sc);
   if (out.status != astroforces::core::Status::Ok) {
     spdlog::error("erp evaluation failed: status={}", static_cast<int>(out.status));

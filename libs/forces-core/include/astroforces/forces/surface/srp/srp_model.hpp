@@ -17,7 +17,7 @@ class Ephemeris;
 class Workspace;
 }
 
-namespace astroforces::srp {
+namespace astroforces::forces {
 
 struct SrpResult {
   astroforces::core::Vec3 acceleration_mps2{};
@@ -51,5 +51,5 @@ class SrpAccelerationModel final {
   mutable std::shared_ptr<jpl::eph::Workspace> workspace_{};
 };
 
-}  // namespace astroforces::srp
+}  // namespace astroforces::forces
 

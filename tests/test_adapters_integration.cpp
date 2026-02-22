@@ -123,7 +123,7 @@ int main() {
 
   weather::StaticSpaceWeatherProvider weather(wx);
   sc::SpacecraftProperties sc{.mass_kg = 600.0, .reference_area_m2 = 4.0, .cd = 2.25, .use_surface_model = false};
-  drag::DragAccelerationModel drag_model(weather, *nrl, *hwm);
+  forces::DragAccelerationModel drag_model(weather, *nrl, *hwm);
   const auto drag_out = drag_model.evaluate(state, sc);
   if (drag_out.status != core::Status::Ok || !(drag_out.density_kg_m3 > 0.0) || !finite(drag_out.acceleration_mps2)) {
     spdlog::error("adapter-backed drag pipeline failed");

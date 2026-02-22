@@ -42,7 +42,7 @@ int main() {
   weather::StaticSpaceWeatherProvider weather(wx);
   models::ExponentialAtmosphereModel atmosphere(3.0e-11, 400e3, 65e3, 900.0);
   models::ZeroWindModel wind;
-  drag::DragAccelerationModel model(weather, atmosphere, wind);
+  forces::DragAccelerationModel model(weather, atmosphere, wind);
   sc::SpacecraftProperties sc{.mass_kg = 600.0, .reference_area_m2 = 4.0, .cd = 2.25, .use_surface_model = false};
 
   std::vector<core::StateVector> states;

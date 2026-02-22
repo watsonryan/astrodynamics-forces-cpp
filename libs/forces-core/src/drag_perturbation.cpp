@@ -6,7 +6,7 @@
 
 #include "astroforces/forces/surface/drag/drag_perturbation.hpp"
 
-namespace astroforces::drag {
+namespace astroforces::forces {
 
 astroforces::forces::PerturbationContribution DragPerturbationModel::evaluate(
     const astroforces::forces::PerturbationRequest& request) const {
@@ -26,4 +26,4 @@ astroforces::forces::PerturbationContribution DragPerturbationModel::evaluate(
   return out;
 }
 
-}  // namespace astroforces::drag
+}  // namespace astroforces::forces

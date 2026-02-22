@@ -43,7 +43,7 @@ int main() {
   astroforces::sc::SpacecraftProperties sc{
       .mass_kg = 600.0, .reference_area_m2 = 4.0, .cd = 2.2, .cr = 1.3, .use_surface_model = false, .surfaces = {}};
 
-  const auto srp = astroforces::srp::SrpAccelerationModel::Create({.ephemeris_file = eph_path, .use_eclipse = false});
+  const auto srp = astroforces::forces::SrpAccelerationModel::Create({.ephemeris_file = eph_path, .use_eclipse = false});
   const auto out = srp->evaluate(state, sc);
   if (out.status != astroforces::core::Status::Ok) {
     spdlog::error("srp evaluate failed");
@@ -58,7 +58,7 @@ int main() {
     return 3;
   }
 
-  const auto srp_e = astroforces::srp::SrpAccelerationModel::Create({.ephemeris_file = eph_path, .use_eclipse = true});
+  const auto srp_e = astroforces::forces::SrpAccelerationModel::Create({.ephemeris_file = eph_path, .use_eclipse = true});
   const auto out_e = srp_e->evaluate(state, sc);
   if (out_e.status != astroforces::core::Status::Ok) {
     spdlog::error("srp eclipse evaluate failed");

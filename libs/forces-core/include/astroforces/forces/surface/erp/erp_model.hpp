@@ -9,7 +9,7 @@
 #include "astroforces/atmo/types.hpp"
 #include "astroforces/sc/spacecraft.hpp"
 
-namespace astroforces::erp {
+namespace astroforces::forces {
 
 struct ErpResult {
   astroforces::core::Vec3 acceleration_mps2{};
@@ -37,4 +37,4 @@ class ErpAccelerationModel final {
   Config config_{};
 };
 
-}  // namespace astroforces::erp
+}  // namespace astroforces::forces

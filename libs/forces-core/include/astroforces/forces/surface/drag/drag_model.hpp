@@ -8,7 +8,7 @@
 #include "astroforces/atmo/interfaces.hpp"
 #include "astroforces/sc/spacecraft.hpp"
 
-namespace astroforces::drag {
+namespace astroforces::forces {
 
 struct DragResult {
   astroforces::core::Vec3 acceleration_mps2{};
@@ -39,4 +39,4 @@ class DragAccelerationModel {
   const astroforces::core::IWindModel& wind_;
 };
 
-}  // namespace astroforces::drag
+}  // namespace astroforces::forces

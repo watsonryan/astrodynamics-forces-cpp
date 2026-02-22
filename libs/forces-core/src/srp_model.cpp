@@ -15,7 +15,7 @@
 #include "astroforces/forces/surface/surface_force.hpp"
 #include "jpl_eph/jpl_eph.hpp"
 
-namespace astroforces::srp {
+namespace astroforces::forces {
 namespace {
 
 astroforces::core::Vec3 to_vec3(const std::array<double, 6>& pv) {
@@ -121,5 +121,5 @@ SrpResult SrpAccelerationModel::evaluate(const astroforces::core::StateVector& s
   };
 }
 
-}  // namespace astroforces::srp
+}  // namespace astroforces::forces
 

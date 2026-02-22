@@ -18,7 +18,7 @@ int main() {
   weather::StaticSpaceWeatherProvider weather(wx);
   models::ExponentialAtmosphereModel atmosphere(3.0e-11, 400e3, 65e3, 900.0);
   models::ZeroWindModel wind;
-  drag::DragAccelerationModel model(weather, atmosphere, wind);
+  forces::DragAccelerationModel model(weather, atmosphere, wind);
 
   core::StateVector state{};
   state.epoch.utc_seconds = 1.0e9;

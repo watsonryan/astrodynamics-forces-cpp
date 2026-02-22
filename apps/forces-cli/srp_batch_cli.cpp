@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
   astroforces::sc::SpacecraftProperties sc{
       .mass_kg = mass_kg, .reference_area_m2 = area_m2, .cd = 2.2, .cr = cr, .use_surface_model = false, .surfaces = {}};
 
-  auto srp = astroforces::srp::SrpAccelerationModel::Create(
+  auto srp = astroforces::forces::SrpAccelerationModel::Create(
       {.ephemeris_file = eph_file, .use_eclipse = use_eclipse});
 
   out << "epoch_utc_s,ax_mps2,ay_mps2,az_mps2,amag_mps2,solar_pressure_pa,sun_distance_m,area_m2,cr,eclipsed,status\n";

@@ -11,7 +11,7 @@
 #include "astroforces/forces/core/perturbation.hpp"
 #include "astroforces/forces/surface/srp/srp_model.hpp"
 
-namespace astroforces::srp {
+namespace astroforces::forces {
 
 class SrpPerturbationModel final : public astroforces::forces::IPerturbationModel {
  public:
@@ -29,5 +29,5 @@ class SrpPerturbationModel final : public astroforces::forces::IPerturbationMode
   std::string name_{};
 };
 
-}  // namespace astroforces::srp
+}  // namespace astroforces::forces
 

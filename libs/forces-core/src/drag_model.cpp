@@ -12,7 +12,7 @@
 
 #include "astroforces/forces/surface/surface_force.hpp"
 
-namespace astroforces::drag {
+namespace astroforces::forces {
 
 DragResult DragAccelerationModel::evaluate(const astroforces::core::StateVector& state,
                                            const astroforces::sc::SpacecraftProperties& sc) const {
@@ -74,4 +74,4 @@ DragResult DragAccelerationModel::evaluate(const astroforces::core::StateVector&
                     .status = astroforces::core::Status::Ok};
 }
 
-}  // namespace astroforces::drag
+}  // namespace astroforces::forces

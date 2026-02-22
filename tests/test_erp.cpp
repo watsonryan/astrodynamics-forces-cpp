@@ -29,7 +29,7 @@ int main() {
   near_state.position_m = astroforces::core::Vec3{astroforces::core::constants::kEarthRadiusWgs84M + 400000.0, 0.0, 0.0};
   near_state.velocity_mps = astroforces::core::Vec3{0.0, 7670.0, 0.0};
 
-  astroforces::erp::ErpAccelerationModel erp{};
+  astroforces::forces::ErpAccelerationModel erp{};
   const auto near_out = erp.evaluate(near_state, sc);
   if (near_out.status != astroforces::core::Status::Ok) {
     spdlog::error("erp evaluate failed at near-state");

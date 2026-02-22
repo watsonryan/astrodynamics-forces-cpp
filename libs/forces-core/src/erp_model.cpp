@@ -12,7 +12,7 @@
 
 #include "astroforces/forces/surface/surface_force.hpp"
 
-namespace astroforces::erp {
+namespace astroforces::forces {
 
 ErpResult ErpAccelerationModel::evaluate(const astroforces::core::StateVector& state,
                                          const astroforces::sc::SpacecraftProperties& sc) const {
@@ -64,5 +64,5 @@ ErpResult ErpAccelerationModel::evaluate(const astroforces::core::StateVector& s
   };
 }
 
-}  // namespace astroforces::erp
+}  // namespace astroforces::forces
 

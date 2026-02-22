@@ -148,7 +148,7 @@ int main(int argc, char** argv) {
 
   astroforces::sc::SpacecraftProperties sc{
       .mass_kg = 1200.0, .reference_area_m2 = 12.0, .cd = 2.2, .use_surface_model = false, .surfaces = {}};
-  astroforces::drag::DragAccelerationModel drag(*weather, *atmosphere, *wind);
+  astroforces::forces::DragAccelerationModel drag(*weather, *atmosphere, *wind);
 
   std::time_t now = std::time(nullptr);
   if (format == "csv") {

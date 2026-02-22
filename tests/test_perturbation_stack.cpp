@@ -58,7 +58,7 @@ int main() {
 
   sc::SpacecraftProperties sc{.mass_kg = 600.0, .reference_area_m2 = 4.0, .cd = 2.25, .use_surface_model = false};
 
-  drag::DragAccelerationModel drag_direct(weather, atmosphere, wind);
+  forces::DragAccelerationModel drag_direct(weather, atmosphere, wind);
   const auto direct = drag_direct.evaluate(state, sc);
   if (direct.status != core::Status::Ok) {
     spdlog::error("direct drag failed");
@@ -66,7 +66,7 @@ int main() {
   }
 
   forces::PerturbationStack stack;
-  stack.add(std::make_unique<drag::DragPerturbationModel>(weather, atmosphere, wind, &sc, "drag_main"));
+  stack.add(std::make_unique<forces::DragPerturbationModel>(weather, atmosphere, wind, &sc, "drag_main"));
   stack.add(std::make_unique<ConstantPerturbation>(core::Vec3{1.0e-9, -2.0e-9, 3.0e-9}, "bias"));
 
   const auto result = stack.evaluate(forces::PerturbationRequest{.state = state, .spacecraft = &sc});
@@ -90,7 +90,7 @@ int main() {
     return 4;
   }
 
-  const drag::DragPerturbationModel drag_no_default(weather, atmosphere, wind, nullptr, "drag_nodefault");
+  const forces::DragPerturbationModel drag_no_default(weather, atmosphere, wind, nullptr, "drag_nodefault");
   const auto missing_sc = drag_no_default.evaluate(forces::PerturbationRequest{.state = state, .spacecraft = nullptr});
   if (missing_sc.status != core::Status::InvalidInput) {
     spdlog::error("missing spacecraft should fail");

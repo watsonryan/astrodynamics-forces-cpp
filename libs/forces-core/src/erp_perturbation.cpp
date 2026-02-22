@@ -6,7 +6,7 @@
 
 #include "astroforces/forces/surface/erp/erp_perturbation.hpp"
 
-namespace astroforces::erp {
+namespace astroforces::forces {
 
 astroforces::forces::PerturbationContribution ErpPerturbationModel::evaluate(
     const astroforces::forces::PerturbationRequest& request) const {
@@ -26,5 +26,5 @@ astroforces::forces::PerturbationContribution ErpPerturbationModel::evaluate(
   return out;
 }
 
-}  // namespace astroforces::erp
+}  // namespace astroforces::forces
 

@@ -97,10 +97,10 @@ Drag area modes:
 General perturbation interface:
 - Use `astroforces::forces::IPerturbationModel` for each force source.
 - Combine models with `astroforces::forces::PerturbationStack`.
-- Drag is exposed as `astroforces::drag::DragPerturbationModel` and plugs directly into the same stack as gravity/SRP/third-body models.
+- Drag is exposed as `astroforces::forces::DragPerturbationModel` and plugs directly into the same stack as gravity/SRP/third-body models.
 - Third-body is exposed as `astroforces::forces::ThirdBodyPerturbationModel` (Sun/Moon direct + indirect terms via JPL ephemerides).
-- ERP is exposed via `astroforces::erp::ErpAccelerationModel` and `astroforces::erp::ErpPerturbationModel`.
-- SRP is exposed via `astroforces::srp::SrpAccelerationModel` and `astroforces::srp::SrpPerturbationModel`.
+- ERP is exposed via `astroforces::forces::ErpAccelerationModel` and `astroforces::forces::ErpPerturbationModel`.
+- SRP is exposed via `astroforces::forces::SrpAccelerationModel` and `astroforces::forces::SrpPerturbationModel`.
 - Relativity is exposed via `astroforces::forces::RelativityAccelerationModel` and `astroforces::forces::RelativityPerturbationModel`.
 - Gravity+tides is exposed via `astroforces::forces::GravitySphAccelerationModel` and `astroforces::forces::GravitySphPerturbationModel`.
 - Drag, ERP, and SRP all use the shared surface-force kernel (`astroforces::forces::evaluate_surface_force`) for cannonball/macro area+coefficient handling.

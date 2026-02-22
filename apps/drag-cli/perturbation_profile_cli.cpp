@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
   components.push_back(ComponentModel{
       .label = "drag",
       .frame = astroforces::core::Frame::ECEF,
-      .model = std::make_unique<astroforces::drag::DragPerturbationModel>(*weather, *atmosphere, wind, &sc, "drag"),
+      .model = std::make_unique<astroforces::forces::DragPerturbationModel>(*weather, *atmosphere, wind, &sc, "drag"),
       .has_valid_altitude_band = true,
       .min_alt_km = kDtmOperationalMinAltKm,
       .max_alt_km = kDtmOperationalMaxAltKm,
@@ -157,7 +157,7 @@ int main(int argc, char** argv) {
   components.push_back(ComponentModel{
       .label = "erp",
       .frame = astroforces::core::Frame::ECI,
-      .model = std::make_unique<astroforces::erp::ErpPerturbationModel>(astroforces::erp::ErpAccelerationModel{}, &sc, "erp"),
+      .model = std::make_unique<astroforces::forces::ErpPerturbationModel>(astroforces::forces::ErpAccelerationModel{}, &sc, "erp"),
   });
   components.push_back(ComponentModel{
       .label = "relativity",
@@ -172,8 +172,8 @@ int main(int argc, char** argv) {
     components.push_back(ComponentModel{
         .label = "srp",
         .frame = astroforces::core::Frame::ECI,
-        .model = std::make_unique<astroforces::srp::SrpPerturbationModel>(
-            astroforces::srp::SrpAccelerationModel::Create({.ephemeris_file = std::filesystem::path(eph_file), .use_eclipse = false}),
+        .model = std::make_unique<astroforces::forces::SrpPerturbationModel>(
+            astroforces::forces::SrpAccelerationModel::Create({.ephemeris_file = std::filesystem::path(eph_file), .use_eclipse = false}),
             &sc,
             "srp"),
     });

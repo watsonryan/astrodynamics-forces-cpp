@@ -10,7 +10,7 @@
 #include "astroforces/forces/surface/drag/drag_model.hpp"
 #include "astroforces/forces/core/perturbation.hpp"
 
-namespace astroforces::drag {
+namespace astroforces::forces {
 
 class DragPerturbationModel final : public astroforces::forces::IPerturbationModel {
  public:
@@ -30,4 +30,4 @@ class DragPerturbationModel final : public astroforces::forces::IPerturbationMod
   std::string name_{};
 };
 
-}  // namespace astroforces::drag
+}  // namespace astroforces::forces

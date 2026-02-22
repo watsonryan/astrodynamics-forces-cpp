@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
   astroforces::sc::SpacecraftProperties sc{
       .mass_kg = mass_kg, .reference_area_m2 = area_m2, .cd = 2.2, .cr = cr, .use_surface_model = false, .surfaces = {}};
 
-  auto srp = astroforces::srp::SrpAccelerationModel::Create(
+  auto srp = astroforces::forces::SrpAccelerationModel::Create(
       {.ephemeris_file = eph_file, .use_eclipse = use_eclipse});
   const auto out = srp->evaluate(state, sc);
   if (out.status != astroforces::core::Status::Ok) {

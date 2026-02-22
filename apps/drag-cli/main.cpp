@@ -75,7 +75,7 @@ const std::string wind_data = (argc >= 12) ? argv[11] : "";
                                        .use_surface_model = false,
                                        .surfaces = {}};
 
-  astroforces::drag::DragAccelerationModel model(*weather, *atmosphere, *wind);
+  astroforces::forces::DragAccelerationModel model(*weather, *atmosphere, *wind);
   const auto result = model.evaluate(state, sc);
 
   if (result.status != astroforces::core::Status::Ok) {

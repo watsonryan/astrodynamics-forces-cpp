@@ -51,12 +51,12 @@ flowchart LR
 ## Force Abstraction
 - `astroforces::forces::IPerturbationModel`: common force contribution interface.
 - `astroforces::forces::PerturbationStack`: additive combiner for all perturbation models.
-- `astroforces::drag::DragPerturbationModel`: drag implementation of the generic interface.
+- `astroforces::forces::DragPerturbationModel`: drag implementation of the generic interface.
 - `astroforces::forces::ThirdBodyPerturbationModel`: configurable Sun/Moon third-body model.
-- `astroforces::erp::ErpPerturbationModel`: ERP implementation of the generic interface.
+- `astroforces::forces::ErpPerturbationModel`: ERP implementation of the generic interface.
 - `astroforces::forces::RelativityPerturbationModel`: relativity implementation of the generic interface.
 - `astroforces::forces::GravitySphPerturbationModel`: full SPH gravity/tides implementation of the generic interface.
-- `astroforces::srp::SrpPerturbationModel`: SRP implementation of the generic interface.
+- `astroforces::forces::SrpPerturbationModel`: SRP implementation of the generic interface.
 
 ## Design Rules
 - Preserve model kernels when integrating external repos.
