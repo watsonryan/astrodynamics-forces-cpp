@@ -1,0 +1,74 @@
+# Author: Watosn
+
+include(${CMAKE_SOURCE_DIR}/cmake/CPM.cmake)
+
+set(ASTROFORCES_NRLMSIS21_REPO "https://github.com/watsonryan/nrlmsis-2_1.git" CACHE STRING "NRLMSIS 2.1 repo")
+set(ASTROFORCES_DTM2020_REPO "https://github.com/watsonryan/dtm2020.git" CACHE STRING "DTM2020 repo")
+set(ASTROFORCES_HWM14_REPO "https://github.com/watsonryan/hwm14.git" CACHE STRING "HWM14 repo")
+set(ASTROFORCES_JPL_EPH_REPO "https://github.com/watsonryan/jplEphem.git" CACHE STRING "jplEphem repo")
+set(ASTROFORCES_EXTERNAL_MODELS_TAG "main" CACHE STRING "Branch/tag for external model repos")
+
+set(ASTROFORCES_EIGEN_REPO "https://gitlab.com/libeigen/eigen.git" CACHE STRING "Eigen repository URL")
+set(ASTROFORCES_EIGEN_TAG "5.0.0" CACHE STRING "Eigen git tag")
+
+CPMAddPackage(
+  NAME eigen
+  GIT_REPOSITORY ${ASTROFORCES_EIGEN_REPO}
+  GIT_TAG ${ASTROFORCES_EIGEN_TAG}
+)
+CPMAddPackage(
+  NAME fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+  GIT_TAG 10.2.1
+)
+CPMAddPackage(
+  NAME spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG v1.14.1
+  OPTIONS
+    "SPDLOG_FMT_EXTERNAL ON"
+)
+
+CPMAddPackage(
+  NAME nrlmsis21_ext
+  GIT_REPOSITORY ${ASTROFORCES_NRLMSIS21_REPO}
+  GIT_TAG ${ASTROFORCES_EXTERNAL_MODELS_TAG}
+  OPTIONS
+    "MSIS21_BUILD_TESTS OFF"
+    "MSIS21_BUILD_CLI OFF"
+)
+
+CPMAddPackage(
+  NAME dtm2020_ext
+  GIT_REPOSITORY ${ASTROFORCES_DTM2020_REPO}
+  GIT_TAG ${ASTROFORCES_EXTERNAL_MODELS_TAG}
+  OPTIONS
+    "DTM2020_BUILD_TESTS OFF"
+    "DTM2020_ENABLE_RESEARCH OFF"
+)
+
+CPMAddPackage(
+  NAME hwm14_ext
+  GIT_REPOSITORY ${ASTROFORCES_HWM14_REPO}
+  GIT_TAG ${ASTROFORCES_EXTERNAL_MODELS_TAG}
+  OPTIONS
+    "HWM14_BUILD_TESTS OFF"
+    "HWM14_BUILD_EXAMPLES OFF"
+)
+
+CPMAddPackage(
+  NAME jpl_eph_ext
+  GIT_REPOSITORY ${ASTROFORCES_JPL_EPH_REPO}
+  GIT_TAG ${ASTROFORCES_EXTERNAL_MODELS_TAG}
+  OPTIONS
+    "JPL_EPH_BUILD_TESTS OFF"
+    "JPL_EPH_BUILD_TOOLS OFF"
+    "JPL_EPH_FETCH_DEPS OFF"
+)
+
+set(ASTROFORCES_EIGEN_TARGET "")
+if(TARGET Eigen3::Eigen)
+  set(ASTROFORCES_EIGEN_TARGET Eigen3::Eigen)
+elseif(TARGET eigen)
+  set(ASTROFORCES_EIGEN_TARGET eigen)
+endif()
