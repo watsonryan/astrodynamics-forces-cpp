@@ -100,6 +100,14 @@ def load_csv(path: Path):
 def pretty_label(key: str) -> str:
     if key == "gravity_sph_tides_mps2":
         return "Grav (N.C.) SPH + Tides"
+    if key == "third_body_sun_mps2":
+        return "3rd Body (Sun)"
+    if key == "third_body_moon_mps2":
+        return "3rd Body (Moon)"
+    if key == "earth_radiation_mps2":
+        return "ERP"
+    if key == "antenna_thrust_mps2":
+        return "Ant. Thrust"
     if key == "gravity_tides_mps2":
         return "Gravity Tides"
     if key == "gravity_sph_mps2":
