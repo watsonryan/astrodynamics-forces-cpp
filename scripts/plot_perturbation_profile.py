@@ -99,7 +99,7 @@ def load_csv(path: Path):
 
 def pretty_label(key: str) -> str:
     if key == "gravity_sph_tides_mps2":
-        return "Gravity SPH + Tides (nc)"
+        return "Grav (N.C.) SPH + Tides"
     if key == "gravity_tides_mps2":
         return "Gravity Tides"
     if key == "gravity_sph_mps2":
